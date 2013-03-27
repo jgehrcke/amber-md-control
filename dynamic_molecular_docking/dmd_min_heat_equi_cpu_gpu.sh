@@ -87,7 +87,11 @@ if [[ "${GPUID}" != "none" ]]; then
     echo "Setting CUDA_VISIBLE_DEVICES to ${GPUID}."
     export CUDA_VISIBLE_DEVICES="${GPUID}"
 else
-    echo "No GPU ID argument given. CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES}."
+    if [ ${CUDA_VISIBLE_DEVICES+x} ]
+        # http://stackoverflow.com/a/7520543/145400
+        then echo "CUDA_VISIBLE_DEVICES is set ('$CUDA_VISIBLE_DEVICES')"
+        else echo "CUDA_VISIBLE_DEVICES is not set."
+    fi
 fi
 
 # Define executables and file names.
