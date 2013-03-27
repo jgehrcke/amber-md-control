@@ -56,15 +56,32 @@ test_number() {
 
 if [ -z "$NUMBER" ]; then
     GPUID="none"
+    CPUNUMBER="none"
 else
     test_number "${NUMBER}"
 fi
 
 if [[ "${GPUCPU}" == "gpu" ]]; then
-    echo "Setting up MD on GPU ${NUMBER}."
-    GPUID="${NUMBER}"
+    echo "Setting up MD on GPU."
+    ENGINE=${CUDAENGINE}
+    if [[ "${GPUID}" != "none" ]]; then
+        GPUID="${NUMBER}"
+        echo "Setting CUDA_VISIBLE_DEVICES to ${GPUID}."
+        export CUDA_VISIBLE_DEVICES="${GPUID}"
+    else
+        if [ ${CUDA_VISIBLE_DEVICES+x} ]
+            # http://stackoverflow.com/a/7520543/145400
+            then echo "CUDA_VISIBLE_DEVICES is set ('$CUDA_VISIBLE_DEVICES')"
+            else echo "CUDA_VISIBLE_DEVICES is not set."
+        fi
+    fi
 elif [[ "${GPUCPU}" == "cpu" ]]; then
     echo "Setting up MD on ${NUMBER} CPU cores."
+    ENGINE=${CPUENGINE}
+    if [[ "${CPUNUMBER}" == "none" ]]; then
+        err "When using option 'cpu', the number of CPUs must be provided."
+        exit 1
+    fi
     CPUNUMBER="${NUMBER}"
 else
     err "Argument must bei either 'gpu' or 'cpu'. Exit."
@@ -73,19 +90,6 @@ fi
 
 echo "Hostname: $(hostname)"
 echo "Current working directory: $(pwd)"
-
-if [[ "${GPUID}" != "none" ]]; then
-    echo "Setting CUDA_VISIBLE_DEVICES to ${GPUID}."
-    export CUDA_VISIBLE_DEVICES="${GPUID}"
-else
-    echo "No GPU ID argument given. CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES}."
-fi
-
-if [[ "${GPUCPU}" == "gpu" ]]; then
-    ENGINE=${CUDAENGINE}
-elif [[ "${GPUCPU}" == "cpu" ]]; then
-    ENGINE=${CPUENGINE}
-fi
 
 # Check if all required files are available.
 check_required () {
