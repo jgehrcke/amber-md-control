@@ -142,7 +142,7 @@ ln -s ../${TOPOLOGYFILE} ${TOPOLOGYFILE}
 ln -s ../${TMD_RESTRAINT_FILE} ${TMD_RESTRAINT_FILE}
 ln -s ../${EQUI_RESTART_FILE} ${EQUI_RESTART_FILE}
 
-echo "tMD time: ${TMD_TIME_NS} ns, time steps: ${TMD_TIME_STEPS}"
+echo "tMD duration: ${TMD_TIME_NS} ns, number of time steps: ${TMD_TIME_STEPS}"
 echo "Writing input file ${PRODINFILE}."
 echo "
 NVT production for N ns at 300 K.
@@ -175,7 +175,7 @@ e.g.  5000000 steps -> 10 ns
 ig: random seed
 ioutfm=1: write binary (NetCDF) trajectory
 
-4 ns (2000000 steps) of tMD
+${TMD_TIME_NS} ns (${TMD_TIME_STEPS} steps) of tMD
 
 &cntrl
  ntx = 1,
