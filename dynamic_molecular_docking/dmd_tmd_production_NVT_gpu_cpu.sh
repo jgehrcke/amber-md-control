@@ -132,6 +132,9 @@ if [ $? != 0 ]; then
     exit 1
 fi
 
+echo "Sourcing $AMBER_SETUP"
+source "${AMBER_SETUP}"
+
 echo "Linking required files to current working directory: $PWD"
 
 # ${TOPOLOGYFILE} etc are guaranteed to be one dir level higher.

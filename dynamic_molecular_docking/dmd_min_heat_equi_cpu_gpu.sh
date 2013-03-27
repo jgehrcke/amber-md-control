@@ -122,7 +122,7 @@ echo "equi time: ${EQUI_TIME_NS} ns, time steps: ${EQUI_TIME_STEPS}"
 #echo "prod time: ${PROD_TIME_NS}, time steps: ${PROD_TIME_STEPS}"
 
 echo "Sourcing $AMBER_SETUP"
-source $AMBER_SETUP
+source "${AMBER_SETUP}"
 
 if [ -f gaginternal.rest ]; then
     ADDITIONALREST="
