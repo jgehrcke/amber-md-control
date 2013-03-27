@@ -13,8 +13,10 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+# Exit script upon first error.
+set -e
 
-AMBER_SETUP="/apps11/bioinfp/amber12_centos58_intel1213_openmpi16_cuda5/setup.sh"
+AMBER_SETUP="/projects/bioinfp_apps/amber12_centos58_intel1213_openmpi16_cuda5/setup.sh"
 
 # Define MD timings. Boundary condition: MD time step of 2 fs.
 HEATUP_TIME_NS="0.02"
