@@ -218,8 +218,6 @@ echo "Starting tMD production..."
 #echo "sourcing  /apps11/bioinfp/amber11_centos5_intel1213_openmpi15/setup.sh"
 #source  /apps11/bioinfp/amber11_centos5_intel1213_openmpi15/setup.sh
 #module load amber/11
-touch PRODUCTION.RUNNING
-echo $(hostname) > RUNNING.HOSTNAME
 CMD="time ${ENGINE} -O -i ${PRODINFILE} -o ${PRODPREFIX}.out -p ${TOPOLOGYFILE} -c ${EQUI_RESTART_FILE} -r ${PRODPREFIX}.rst -x ${PRODPREFIX}.mdcrd"
 print_run_command "${CMD}"
 
@@ -227,8 +225,4 @@ if [ $? != 0 ]; then
     echo "Error during tMD production. exit."
     exit 1
 fi
-
-check_delete PRODUCTION.RUNNING
-check_delete RUNNING.HOSTNAME
-
 echo "tMD finished."
