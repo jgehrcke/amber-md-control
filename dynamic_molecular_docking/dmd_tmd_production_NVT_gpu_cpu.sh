@@ -88,8 +88,12 @@ else
     exit 1
 fi
 
+# Useful debug output.
 echo "Hostname: $(hostname)"
 echo "Current working directory: $(pwd)"
+if [ ${PBS_JOBID+x} ]; then
+    echo "PBS_JOBID is set ('${PBS_JOBID}')"
+fi
 
 # Check if all required files are available.
 check_required () {
