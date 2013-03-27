@@ -62,7 +62,7 @@ else
 fi
 
 if [[ "${GPUCPU}" == "gpu" ]]; then
-    echo "Setting up MD on GPU."
+    echo "Setting up tMD on GPU."
     ENGINE=${CUDAENGINE}
     if [[ "${GPUID}" != "none" ]]; then
         GPUID="${NUMBER}"
@@ -76,7 +76,7 @@ if [[ "${GPUCPU}" == "gpu" ]]; then
         fi
     fi
 elif [[ "${GPUCPU}" == "cpu" ]]; then
-    echo "Setting up MD on ${NUMBER} CPU cores."
+    echo "Setting up tMD on ${NUMBER} CPU cores."
     ENGINE=${CPUENGINE}
     if [[ "${CPUNUMBER}" == "none" ]]; then
         err "When using option 'cpu', the number of CPUs must be provided."
@@ -128,7 +128,7 @@ if [ $? != 0 ]; then
     exit 1
 fi
 
-echo "Linking initcrd and prmtop to current working directory."
+echo "Linking required files to current working directory: $PWD"
 
 # ${TOPOLOGYFILE} etc are guaranteed to be one dir level higher.
 ln -s ../${TOPOLOGYFILE} ${TOPOLOGYFILE}
@@ -198,7 +198,7 @@ LISTOUT=POUT
 " > ${PRODINFILE}
 
 echo
-echo "content of ${PRODINFILE}:"
+echo "Content of ${PRODINFILE}:"
 cat ${PRODINFILE}
 
 print_run_command () {
@@ -225,4 +225,3 @@ check_delete PRODUCTION.RUNNING
 check_delete RUNNING.HOSTNAME
 
 echo "tMD finished."
-
