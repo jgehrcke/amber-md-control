@@ -17,8 +17,6 @@
 set -e
 
 AMBER_SETUP="/projects/bioinfp_apps/amber12_centos58_intel1213_openmpi16_cuda5/setup.sh"
-CUDAENGINE="pmemd.cuda"
-CPUENGINE="mpirun -np ${CPUNUMBER} pmemd.MPI"
 EQUI_RESTART_FILE="equilibrate_NPT.rst"
 TMD_RESTRAINT_FILE="dmd_tmd.rest"
 TOPOLOGYFILE="top.prmtop"
@@ -63,7 +61,7 @@ fi
 
 if [[ "${GPUCPU}" == "gpu" ]]; then
     echo "Setting up tMD on GPU."
-    ENGINE=${CUDAENGINE}
+    ENGINE="pmemd.cuda"
     if [[ "${GPUID}" != "none" ]]; then
         GPUID="${NUMBER}"
         echo "Setting CUDA_VISIBLE_DEVICES to ${GPUID}."
@@ -77,12 +75,13 @@ if [[ "${GPUCPU}" == "gpu" ]]; then
     fi
 elif [[ "${GPUCPU}" == "cpu" ]]; then
     echo "Setting up tMD on ${NUMBER} CPU cores."
-    ENGINE=${CPUENGINE}
+
     if [[ "${CPUNUMBER}" == "none" ]]; then
         err "When using option 'cpu', the number of CPUs must be provided."
         exit 1
     fi
     CPUNUMBER="${NUMBER}"
+    ENGINE="mpirun -np ${CPUNUMBER} pmemd.MPI"
 else
     err "Argument must bei either 'gpu' or 'cpu'. Exit."
     exit 1
