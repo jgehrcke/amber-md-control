@@ -4,7 +4,7 @@
 # Exit script upon first error.
 set -e
 
-AMBER_SETUP="/project/bioinfp_apps/amber12_centos58_intel1213_openmpi16_cuda5/setup.sh"
+AMBER_SETUP="/projects/bioinfp_apps/amber12_centos58_intel1213_openmpi16_cuda5/setup.sh"
 CORE_ATOM_ID=$(cat core_atom_id)
 LIGAND_CENTER_ATOM_ID=$(cat ligand_center_atom_id)
 CORE_CENTER_TARGET_DISTANCE=$(cat core_center_target_distance)
