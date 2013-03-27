@@ -23,7 +23,6 @@ err() {
     echo "$@" 1>&2;
     }
 
-
 SCRIPTNAME="$(basename "$0")"
 
 # Check number of given arguments:
