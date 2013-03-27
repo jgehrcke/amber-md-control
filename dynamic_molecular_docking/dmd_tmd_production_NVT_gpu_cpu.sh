@@ -35,7 +35,7 @@ err() {
 # Check number of arguments, define help message.
 SCRIPTNAME="$(basename "$0")"
 # Check number of given arguments:
-if [ $# -ne 2 ]; then
+if [ $# -lt 2 ]; then
     err "Usage: ${SCRIPTNAME} gpu|cpu n_cpus|[gpu_id]"
     err "arg 1: run/output directory (will be created in cwd)."
     err "arg 2: gpu or cpu"
