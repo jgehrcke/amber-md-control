@@ -1,0 +1,1 @@
+../../normal_system/min_heat_equi_prod_gpu_cpu.sh
