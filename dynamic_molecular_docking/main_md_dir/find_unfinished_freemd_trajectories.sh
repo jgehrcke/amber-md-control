@@ -36,24 +36,34 @@ log() {
     }
 
 PRMTOP="top.prmtop"
-TMDOUTFILE="dmd_tmd_NVT.out"
-TRAJFILE="dmd_tmd_NVT.mdcrd"
-
+FREEMDOUTFILE="production_NVT.out"
+TRAJFILE="production_NVT.mdcrd"
+FREEMDDIR="freemd"
 
 
 for LIGDIR in ligand_*; do
-    cd ${LIGDIR};
+    if [ -d "$LIGIDR" ]; then
+        cd ${LIGDIR}
+    else
+        continue
+    fi
     for TMDDIR in tmd_*; do
         if [ -d ${TMDDIR} ]; then
             cd ${TMDDIR}
         else
             continue
         fi
-        if [ ! -f "${TMDOUTFILE}" ]; then
-            log "${PWD}: no ${TMDOUTFILE}."
+        if [ -d "$FREEMDDIR" ]; then
+            cd "$FREEMDDIR"
+        else
+            log "Dir '$FREEMDDIR' not in '${LIGDIR}/${TMDDIR}'"
+            continue
+        fi
+        if [ ! -f "${FREEMDOUTFILE}" ]; then
+            log "${PWD}: no ${FREEMDOUTFILE}."
             cd .. ; continue
         fi
-        OUTFILE_FINISH=$(tail ${TMDOUTFILE} -n 1 | grep "wall time")
+        OUTFILE_FINISH=$(tail ${FREEMDOUTFILE} -n 1 | grep "wall time")
         if [ -z "${OUTFILE_FINISH}" ]; then
             log "${PWD}: not finished."
         else
@@ -62,7 +72,6 @@ for LIGDIR in ligand_*; do
                 echo $PWD
             fi
         fi
-
         if [ ! -f "${TRAJFILE}" ]; then
             log "$PWD: no $TRAJFILE"
             cd .. ; continue

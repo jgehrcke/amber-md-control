@@ -20,6 +20,8 @@ set -e
 FREEMDDIR="freemd"
 FREEMD_REQUIRED_FILES_DIR="freemd_required_files"
 
+source /projects/bioinfp_apps/amber12_centos58_intel1213_openmpi16_cuda5/setup.sh
+
 err() {
     # Print error message to stderr.
     echo "ERROR >>> $@" 1>&2
