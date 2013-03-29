@@ -16,7 +16,9 @@
 #
 
 
-if [[ "$1" == "--finished-only" ]];then
+#set -e
+
+if [[ "$1" == "--finished-only" ]]; then
     FINISHEDONLY=true
 else
     FINISHEDONLY=false
@@ -42,7 +44,7 @@ FREEMDDIR="freemd"
 
 
 for LIGDIR in ligand_*; do
-    if [ -d "$LIGIDR" ]; then
+    if [ -d "$LIGDIR" ]; then
         cd ${LIGDIR}
     else
         continue
@@ -61,7 +63,7 @@ for LIGDIR in ligand_*; do
         fi
         if [ ! -f "${FREEMDOUTFILE}" ]; then
             log "${PWD}: no ${FREEMDOUTFILE}."
-            cd .. ; continue
+            cd ../../ ; continue
         fi
         OUTFILE_FINISH=$(tail ${FREEMDOUTFILE} -n 1 | grep "wall time")
         if [ -z "${OUTFILE_FINISH}" ]; then
@@ -74,15 +76,15 @@ for LIGDIR in ligand_*; do
         fi
         if [ ! -f "${TRAJFILE}" ]; then
             log "$PWD: no $TRAJFILE"
-            cd .. ; continue
+            cd ../../ ; continue
         fi
         FRAMECOUNTACTUAL=$(netcdftraj_framecount -p ${PRMTOP} -n ${TRAJFILE})
         if [ $? != 0 ]; then
             err "$(pwd): netcdftraj_framecount returned with error."
-            cd ..; cd ..; exit
+            cd ../../ ; exit
         fi
         log "${FRAMECOUNTACTUAL} frames."
-        cd ..;
+        cd ../../ ;
     done;
     cd ..;
 done
