@@ -42,7 +42,11 @@ TRAJFILE="dmd_tmd_NVT.mdcrd"
 
 
 for LIGDIR in ligand_*; do
-    cd ${LIGDIR};
+    if [ -d ${LIGDIR}; ]; then
+        cd ${LIGDIR};
+    else
+        continue
+    fi
     for TMDDIR in tmd_*; do
         if [ -d ${TMDDIR} ]; then
             cd ${TMDDIR}
