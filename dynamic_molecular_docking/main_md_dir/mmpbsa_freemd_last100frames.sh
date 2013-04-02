@@ -125,7 +125,7 @@ RUNDIR="${PROJECT}"
 INFILE="${PROJECT}.in"
 if [ -d ${RUNDIR} ]; then
     err "Directory ${RUNDIR} already exists. Exit."
-    exit 1
+    exit 0
 fi
 log "Creating and entering directory ${RUNDIR}."
 mkdir ${RUNDIR}
