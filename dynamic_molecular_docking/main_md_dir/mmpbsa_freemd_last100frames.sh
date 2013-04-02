@@ -123,6 +123,7 @@ MMPBSAINPUT="
 
 RUNDIR="${PROJECT}"
 INFILE="${PROJECT}.in"
+INFILE_WOEXT="${INFILE%.*}"
 if [ -d ${RUNDIR} ]; then
     err "Directory ${RUNDIR} already exists. Exit."
     exit 0
@@ -144,4 +145,4 @@ CMD="time ${ENGINE} -O -i ${INFILE} \
     -rp ../${TOP_RECEPTOR} \
     -lp ../${TOP_LIGAND} \
     -y ../${TRAJFILE}"
-print_run_command "${CMD}"
+print_run_command "${CMD}" 2>&1 | tee ${INFILE_WOEXT}.log
