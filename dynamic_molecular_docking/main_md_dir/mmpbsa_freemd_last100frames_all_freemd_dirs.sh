@@ -16,14 +16,13 @@ echo "execute script in each free MD dir: ${ABSPATH_TO_SCRIPT}"
 do
     cd "$FREEMDDIR"
     echo "Working in $FREEMDDIR (swallowing stdout)..."
-    # Give it some STDIN to read from, otherwise the while loop might break.
+    # Some MMPBSA-related process reads from STDIN and therefore swallows
+    # the output of find_unfinished... provided to `while read...` above.
+    # Give MMPBSA some STDIN to read from in order to keep the loop intact.
     ${ABSPATH_TO_SCRIPT} "$NBR_CPUS" 1> /dev/null < /dev/null
     if [ $? -ne 0 ]; then
         echo "Error observed. Abort free MD dir iteration."
         exit 1
-    else
-        echo "Exit code 0. Continue."
     fi
-    echo "cd $STARTDIR"
     cd "$STARTDIR"
 done
