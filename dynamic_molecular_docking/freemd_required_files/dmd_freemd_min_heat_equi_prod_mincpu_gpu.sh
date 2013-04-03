@@ -58,17 +58,17 @@ SCRIPTNAME="$(basename "$0")"
 
 # Check number of given arguments:
 if [ $# -le 2 ]; then
-    err "Usage: ${SCRIPTNAME} prmtopfile coordfile n_cpus4min [gpu_id]"
+    err "Usage: ${SCRIPTNAME} prmtopfile coordfile n_cpus [gpu_id]"
     err "1st argument: the prmtop file of the system to minimize."
     err "2nd argument: the initial coord file of the system to minimize."
-    err "3rd argument: the number of CPUs to use during minimization."
-    err "4th argument: GPU ID (optional)"
+    err "3rd argument: the number of CPUs to use (for minimization in case of GPU)."
+    err "4th argument: GPU ID (optional in case of GPU) or 'cpu' (runs all steps on CPU)"
     exit 1
 fi
 
 PRMTOP="$1"
 INITCRD="$2"
-CPUS4MIN="$3"
+NCPUS="$3"
 GPUID="$4"
 
 test_number() {
@@ -78,12 +78,24 @@ test_number() {
     fi
     }
 
-test_number "${CPUS4MIN}"
+# The third argument must in any case be a number.
+test_number "${NCPUS}"
 
+# ENGINE can bei either GPU or CPU engine. Set default here.
+ENGINE="pmemd.cuda"
+CPUENGINE="mpirun -np ${NCPUS} pmemd.MPI"
+
+# GPUID is either not set (default GPU), a number (use *that* GPU) or 'cpu'.
 if [ -z "$GPUID" ]; then
     GPUID="none"
 else
-    test_number "${GPUID}"
+    if [[ "${GPUID}" == "cpu" ]]; then
+        # Use CPU engine as default engine, mark GPUID as being useless.
+        ENGINE="${CPUENGINE}"
+        GPUID="none"
+    else
+        test_number "${GPUID}"
+    fi
 fi
 
 # Useful debug output.
@@ -104,9 +116,7 @@ else
     fi
 fi
 
-# Define executables and file names.
-ENGINE="pmemd.cuda"
-CPUENGINE="mpirun -np ${CPUS4MIN} pmemd.MPI"
+# Define file names.
 MIN1PREFIX="min1"
 MIN2PREFIX="min2"
 MIN1FILE="${MIN1PREFIX}.in"
