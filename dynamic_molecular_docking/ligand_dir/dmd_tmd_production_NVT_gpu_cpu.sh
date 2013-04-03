@@ -131,9 +131,12 @@ if [ $? != 0 ]; then
     exit 1
 fi
 
-echo "Sourcing $AMBER_SETUP"
-source "${AMBER_SETUP}"
+echo "Try loading ZIH module amber/12"
 module load amber/12 # valid on ZIH
+if [ $? -ne 0 ]; then
+    echo "Sourcing $AMBER_SETUP"
+    source "${AMBER_SETUP}"
+fi
 
 echo "Linking required files to current working directory: $PWD"
 
