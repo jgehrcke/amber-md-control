@@ -133,6 +133,7 @@ fi
 
 echo "Sourcing $AMBER_SETUP"
 source "${AMBER_SETUP}"
+module load amber/12 # valid on ZIH
 
 echo "Linking required files to current working directory: $PWD"
 
