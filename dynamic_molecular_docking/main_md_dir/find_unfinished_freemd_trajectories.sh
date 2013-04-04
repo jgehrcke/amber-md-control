@@ -68,10 +68,14 @@ for LIGDIR in ligand_*; do
         OUTFILE_FINISH=$(tail ${FREEMDOUTFILE} -n 1 | grep "wall time")
         if [ -z "${OUTFILE_FINISH}" ]; then
             log "${PWD}: not finished."
+            if  $FINISHEDONLY ; then
+                cd ../../ ; continue
+            fi
         else
             log "${PWD}: finished."
             if  $FINISHEDONLY ; then
                 echo $PWD
+                cd ../../ ; continue
             fi
         fi
         if [ ! -f "${TRAJFILE}" ]; then
