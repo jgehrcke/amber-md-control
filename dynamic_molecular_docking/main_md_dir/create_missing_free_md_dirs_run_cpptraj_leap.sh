@@ -47,7 +47,7 @@ fi
 
 MAINDIR=${PWD}
 
-./find_unfinished_tMD_trajectories.sh --finished-only | while read TMDDIR
+./find_unfinished_tmd_trajectories.sh --finished-only | while read TMDDIR
 do
     log "Finished tMD in dir: $TMDDIR"
     TARGETDIR="${TMDDIR}/${FREEMDDIR}"
