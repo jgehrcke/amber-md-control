@@ -141,7 +141,7 @@ check_delete ${MIN2FILE}
 echo "Writing minimization input file ${MIN1FILE} ..."
 echo "minimization 1
 http://ambermd.org/tutorials/basic/tutorial1/section5.htm
-Two stage approach. First stage: solute fixed,  minimize the water and ions.
+Two stage approach. First stage: solute fixed, minimize the water and ions.
 Second stage: minimize the entire system.
 
 steepest descent: ncyc, conjugate gradient: maxcyc-ncyc
@@ -169,7 +169,6 @@ echo "Minimization 2
  maxcyc = 2500,
  ncyc = 1000,
  ntb = 1,
- ntr = 0,
  cut = 8.0,
 /
 " > ${MIN2FILE}
@@ -189,7 +188,7 @@ if [ $? != 0 ]; then
     err "Error during first minimization. Exit."
     exit 1
 fi
-echo "Running second minimization (entire system is flexible)..."
+echo "Running second minimization (entire system flexible)..."
 CMD="time ${ENGINE} -O -i ${MIN2FILE} -o ${MIN2PREFIX}.out -p ${PRMTOP} \
      -c ${MIN1PREFIX}.rst -r ${MIN2PREFIX}.rst -ref ${INITCRD}"
 print_run_command "${CMD}"
@@ -198,5 +197,3 @@ if [ $? != 0 ]; then
     exit 1
 fi
 echo "Minimizations done."
-
-echo "Minimization finished."
