@@ -47,7 +47,7 @@ print_run_command () {
 SCRIPTNAME="$(basename "$0")"
 
 # Check number of given arguments:
-if [ $# -le 2 ]; then
+if [ $# -le 1 ]; then
     err "Usage: ${SCRIPTNAME} prmtopfile coordfile n_cpus/gpu_id [cpu]"
     err "1st argument: the prmtop file of the system to minimize."
     err "2nd argument: the initial coord file of the system to minimize."
@@ -141,10 +141,8 @@ check_delete ${MIN2FILE}
 echo "Writing minimization input file ${MIN1FILE} ..."
 echo "minimization 1
 http://ambermd.org/tutorials/basic/tutorial1/section5.htm
-Our minimization procedure will consist of a two stage approach.
-In the first stage we will keep the SOLUTE fixed and just minimize
-the positions of the water and ions. Then in the second stage we
-will minimize the entire system.
+Two stage approach. First stage: solute fixed,  minimize the water and ions.
+Second stage: minimize the entire system.
 
 steepest descent: ncyc, conjugate gradient: maxcyc-ncyc
 ntb=1: periodic boundary conditions
@@ -165,13 +163,6 @@ ntr=1: restraints
 
 echo "Writing minimization input file ${MIN2FILE} ..."
 echo "Minimization 2
-http://ambermd.org/tutorials/basic/tutorial1/section5.htm
-Our minimization procedure will consist of a two stage approach.
-In the first stage we will keep the SOLUTE fixed and just minimize
-the positions of the water and ions. Then in the second stage we
-will minimize the entire system.
-
-Additional Heparin torsional restraints.
 
 &cntrl
  imin = 1,
@@ -189,7 +180,6 @@ cat ${MIN1FILE}
 echo
 echo "content of ${MIN2FILE}:"
 cat ${MIN2FILE}
-
 
 echo "Running first minimization (fixed solute)..."
 CMD="time ${ENGINE} -O -i ${MIN1FILE} -o ${MIN1PREFIX}.out -p ${PRMTOP} \
