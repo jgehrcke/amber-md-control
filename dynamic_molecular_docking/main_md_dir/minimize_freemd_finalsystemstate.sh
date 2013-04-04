@@ -118,6 +118,12 @@ MIN2PREFIX="after_freemd_min2"
 MIN1FILE="${MIN1PREFIX}.in"
 MIN2FILE="${MIN2PREFIX}.in"
 
+# Don't take action if final output file exists.
+if [ -f "${MIN2PREFIX}.rst" ];then
+    err "${MIN2PREFIX}.rst exists. Exit with returncode 0."
+    exit 0
+fi
+
 # Set up environment for Amber.
 MODULE_TEST_OUTPUT=$(command -v module) # valid on ZIH
 if [ $? -eq 0 ]; then
