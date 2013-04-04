@@ -85,7 +85,9 @@ strip ${AMBMASK}
 trajout ${OUTPDB} pdb
 go
 "
-echo "${INPUT}" | cpptraj -p ${PRMTOP} &> ${SCRIPTNAME}_${OUTPDB}.stdouterr
+SCRIPTNAME_WOEXT="${SCRIPTNAME%.*}"
+OUTPDB_WOEXT="${OUTPDB%.*}"
+echo "${INPUT}" | cpptraj -p ${PRMTOP} &> ${SCRIPTNAME_WOEXT}_${OUTPDB_WOEXT}.stdouterr
 
 if [ $? -ne 0 ]; then
     err "cpptraj returncode != 0. Exit."
