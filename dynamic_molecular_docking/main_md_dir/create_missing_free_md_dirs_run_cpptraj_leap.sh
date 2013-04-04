@@ -15,8 +15,6 @@
 #   limitations under the License.
 #
 
-set -e
-
 FREEMDDIR="freemd"
 FREEMD_REQUIRED_FILES_DIR="freemd_required_files"
 
@@ -29,6 +27,8 @@ else
     echo "Sourcing $AMBER_SETUP"
     source "${AMBER_SETUP}"
 fi
+
+set -e
 
 err() {
     # Print error message to stderr.
