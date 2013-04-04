@@ -118,7 +118,7 @@ MIN2FILE="${MIN2PREFIX}.in"
 
 # Set up environment for Amber.
 MODULE_TEST_OUTPUT=$(command -v module) # valid on ZIH
-if [ $? -e 0 ]; then
+if [ $? -eq 0 ]; then
     echo "Try loading ZIH module amber/12"
     module load amber/12
 else
