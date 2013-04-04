@@ -15,9 +15,6 @@
 
 # To be executed in free MD directory.
 
-# Exit script upon first error.
-set -e
-
 AMBER_SETUP="/projects/bioinfp_apps/amber12_centos58_intel1213_openmpi16_cuda5/setup.sh"
 
 err() {
@@ -119,12 +116,17 @@ MIN2PREFIX="after_freemd_min2"
 MIN1FILE="${MIN1PREFIX}.in"
 MIN2FILE="${MIN2PREFIX}.in"
 
-echo "Try loading ZIH module amber/12"
-module load amber/12 # valid on ZIH
-if [ $? -ne 0 ]; then
+# Set up environment for Amber.
+MODULE_TEST_OUTPUT=$(command -v module) # valid on ZIH
+if [ $? -e 0 ]; then
+    echo "Try loading ZIH module amber/12"
+    module load amber/12
+else
     echo "Sourcing $AMBER_SETUP"
     source "${AMBER_SETUP}"
 fi
+
+exit
 
 # MINIMIZATION
 # ============================================================================
