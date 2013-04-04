@@ -99,14 +99,16 @@ if [ ${PBS_JOBID+x} ]; then
     echo "PBS_JOBID is set ('${PBS_JOBID}')"
 fi
 
-if [[ "${GPUID}" != "none" ]]; then
-    echo "Setting CUDA_VISIBLE_DEVICES to ${GPUID}."
-    export CUDA_VISIBLE_DEVICES="${GPUID}"
-else
-    if [ ${CUDA_VISIBLE_DEVICES+x} ]
-        # http://stackoverflow.com/a/7520543/145400
-        then echo "CUDA_VISIBLE_DEVICES is set ('$CUDA_VISIBLE_DEVICES')"
-        else echo "CUDA_VISIBLE_DEVICES is not set."
+if [ -z "$CPU" ]; then
+    if [[ "${GPUID}" != "none" ]]; then
+        echo "Setting CUDA_VISIBLE_DEVICES to ${GPUID}."
+        export CUDA_VISIBLE_DEVICES="${GPUID}"
+    else
+        if [ ${CUDA_VISIBLE_DEVICES+x} ]
+            # http://stackoverflow.com/a/7520543/145400
+            then echo "CUDA_VISIBLE_DEVICES is set ('$CUDA_VISIBLE_DEVICES')"
+            else echo "CUDA_VISIBLE_DEVICES is not set."
+        fi
     fi
 fi
 
@@ -125,8 +127,6 @@ else
     echo "Sourcing $AMBER_SETUP"
     source "${AMBER_SETUP}"
 fi
-
-exit
 
 # MINIMIZATION
 # ============================================================================
