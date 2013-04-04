@@ -20,7 +20,15 @@ set -e
 FREEMDDIR="freemd"
 FREEMD_REQUIRED_FILES_DIR="freemd_required_files"
 
-source /projects/bioinfp_apps/amber12_centos58_intel1213_openmpi16_cuda5/setup.sh
+# Set up environment for Amber.
+MODULE_TEST_OUTPUT=$(command -v module) # valid on ZIH
+if [ $? -eq 0 ]; then
+    echo "Try loading ZIH module amber/12"
+    module load amber/12
+else
+    echo "Sourcing $AMBER_SETUP"
+    source "${AMBER_SETUP}"
+fi
 
 err() {
     # Print error message to stderr.
@@ -65,6 +73,6 @@ do
         ln -s "${LINK_TARGET}" "${LINK_NAME}"
     done
     cd ${TARGETDIR}
-    ./build_new_final_system_state_topology.sh
+    ./build_new_final_system_state_topology.sh < /dev/null
     cd ${MAINDIR}
 done
