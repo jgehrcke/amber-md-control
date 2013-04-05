@@ -48,6 +48,13 @@ print_run_command () {
     echo
     }
 
+check_command () {
+    command -v "${1}"
+    if [ $? -ne 0 ]; then
+        err "Command '${1}' not found. Exit."
+        exit 1
+    fi
+    }
 
 # check number of given arguments:
 if [ $# != 5 ]; then
@@ -75,6 +82,7 @@ fi
 
 check_required "${PRMTOP}"
 check_required "${TRAJFILE}"
+check_command cpptraj
 
 log "which cpptraj: $(which cpptraj)"
 log "cpptraj: extract PDB from $(pwd)/${TRAJFILE}, frameselection '${FRAMESELECTION}', strip '${AMBMASK}'"
