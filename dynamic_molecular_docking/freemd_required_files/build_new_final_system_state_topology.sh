@@ -80,7 +80,7 @@ print_run_command "../../../trajframe_to_pdb_using_stripmask.sh ../${PRMTOP} ../
 log "Extracting ligand PDB from final state."
 print_run_command "../../../trajframe_to_pdb_using_stripmask.sh ../${PRMTOP} ../${TRAJFILE} lastframe '!:${LIGAND_RESIDUES}' final_ligand_state.pdb"
 
-print_run_command "tleap -f leap.in > leap.stdouterr 2>&1"
+print_run_command "tleap -I ~/leap_search_path -f leap.in > leap.stdouterr 2>&1"
 
 if [ $? != 0 ]; then
     err "tleap failed. Exit."
