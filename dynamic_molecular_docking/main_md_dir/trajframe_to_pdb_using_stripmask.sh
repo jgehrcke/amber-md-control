@@ -68,8 +68,8 @@ OUTPDB="$5"
 
 
 if [ -f "${OUTPDB}" ]; then
-    err "${MDDIR}/${OUTPDB} already exists. exit."
-    exit 1
+    err "${MDDIR}/${OUTPDB} already exists. Exit with returncode 0."
+    exit 0
 fi
 
 
