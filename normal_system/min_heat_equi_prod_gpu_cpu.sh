@@ -1,5 +1,5 @@
 #!/bin/bash
-#   Copyright (C) 2012-2013 Jan-Philip Gehrcke
+#   Copyright 2012-2013 Jan-Philip Gehrcke
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -13,24 +13,25 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-AMBER_SETUP="/apps11/bioinfp/amber12_centos58_intel1213_openmpi16_cuda5/setup.sh"
-echo "Sourcing $AMBER_SETUP"
-source $AMBER_SETUP
+# Set up environment for Amber.
+AMBER_SETUP="/projects/bioinfp_apps/amber12_centos58_intel1213_openmpi16_cuda5/setup.sh"
+MODULE_TEST_OUTPUT=$(command -v module) # valid on ZIH
+if [ $? -eq 0 ]; then
+    echo "Try loading ZIH module amber/12"
+    module load amber/12
+else
+    echo "Sourcing $AMBER_SETUP"
+    source "${AMBER_SETUP}"
+fi
 
-# Boundary condition: MD time step of 2 fs.
-
+# Define MD timings. Boundary condition: MD time step of 2 fs.
 HEATUP_TIME_NS="0.02"
 EQUI_TIME_NS="0.5"
-PROD_TIME_NS="20"
+PROD_TIME_NS="25"
 
 HEATUP_TIME_STEPS=$(python -c "print int(${HEATUP_TIME_NS}*1000000*0.5)")
 EQUI_TIME_STEPS=$(python -c "print int(${EQUI_TIME_NS}*1000000*0.5)")
 PROD_TIME_STEPS=$(python -c "print int(${PROD_TIME_NS}*1000000*0.5)")
-
-echo "heatup time: ${HEATUP_TIME_NS}, time steps: ${HEATUP_TIME_STEPS}"
-echo "equi time: ${EQUI_TIME_NS}, time steps: ${EQUI_TIME_STEPS}"
-echo "prod time: ${PROD_TIME_NS}, time steps: ${PROD_TIME_STEPS}"
-
 
 err() {
     # Print error message to stderr.
@@ -56,48 +57,72 @@ check_required () {
 print_run_command () {
     echo "Running command:"
     echo "${1}"
-    ${1}
+    eval "${1}"
     }
 
 SCRIPTNAME="$(basename "$0")"
 
 # Check number of given arguments:
-if [ $# != 4 ]; then
-    err "Usage: ${SCRIPTNAME} prmtopfile coordfile GPU_ID/#_CPUS gpu/cpu"
-    err "1st argument: the prmtop file of the system."
-    err "2nd argument: the initial coordinate file of the system."
-    err "3rd argument: the GPU ID to use or the number of CPUs to use."
-    err "4th argument: gpu or cpu"
+if [ $# -le 2 ]; then
+    err "Usage: ${SCRIPTNAME} prmtopfile coordfile n_cpus [gpu_id]"
+    err "1st argument: the prmtop file of the system to minimize."
+    err "2nd argument: the initial coord file of the system to minimize."
+    err "3rd argument: the number of CPUs to use (for minimization in case of GPU)."
+    err "4th argument: GPU ID (optional in case of GPU) or 'cpu' (runs all steps on CPU)"
     exit 1
 fi
 
 PRMTOP="$1"
 INITCRD="$2"
-NUMBER="$3"
-GPUCPU="$4"
+NCPUS="$3"
+GPUID="$4"
 
-if ! [[ "${NUMBER}" =~ ^[0-9]+$ ]] ; then
-   err "Not a number: ${NUMBER}. Exit."
-   exit 1
-fi
+test_number() {
+    if ! [[ "${1}" =~ ^[0-9]+$ ]] ; then
+        err "Not a number: ${1}. Exit."
+        exit 1
+    fi
+    }
 
-if [[ "${GPUCPU}" == "gpu" ]]; then
-    echo "Setting up MD on GPU ${NUMBER}."
-elif [[ "${GPUCPU}" == "cpu" ]]; then
-    echo "Setting up MD on ${NUMBER} CPU cores."
+# The third argument must in any case be a number.
+test_number "${NCPUS}"
+
+# ENGINE can bei either GPU or CPU engine. Set default here.
+ENGINE="pmemd.cuda"
+CPUENGINE="mpirun -np ${NCPUS} pmemd.MPI"
+
+# GPUID is either not set (default GPU), a number (use *that* GPU) or 'cpu'.
+if [ -z "$GPUID" ]; then
+    GPUID="none"
 else
-    err "4th argument must bei either 'gpu' or 'cpu'. Exit."
-    exit 1
+    if [[ "${GPUID}" == "cpu" ]]; then
+        # Use CPU engine as default engine, mark GPUID as being useless.
+        ENGINE="${CPUENGINE}"
+        GPUID="none"
+    else
+        test_number "${GPUID}"
+    fi
 fi
 
-
-# Define executables and file names.
-if [[ "${GPUCPU}" == "gpu" ]]; then
-    export CUDA_VISIBLE_DEVICES="${NUMBER}"
-    ENGINE="pmemd.cuda"
-elif [[ "${GPUCPU}" == "cpu" ]]; then
-    ENGINE="mpirun -np ${NUMBER} pmemd.MPI"
+# Useful debug output.
+echo "Hostname: $(hostname)"
+echo "Current working directory: $(pwd)"
+if [ ${PBS_JOBID+x} ]; then
+    echo "PBS_JOBID is set ('${PBS_JOBID}')"
 fi
+
+if [[ "${GPUID}" != "none" ]]; then
+    echo "Setting CUDA_VISIBLE_DEVICES to ${GPUID}."
+    export CUDA_VISIBLE_DEVICES="${GPUID}"
+else
+    if [ ${CUDA_VISIBLE_DEVICES+x} ]
+        # http://stackoverflow.com/a/7520543/145400
+        then echo "CUDA_VISIBLE_DEVICES is set ('$CUDA_VISIBLE_DEVICES')"
+        else echo "CUDA_VISIBLE_DEVICES is not set."
+    fi
+fi
+
+# Define file names.
 MIN1PREFIX="min1"
 MIN2PREFIX="min2"
 MIN1FILE="${MIN1PREFIX}.in"
@@ -109,6 +134,9 @@ EQUIINFILE="${EQUIPREFIX}.in"
 PRODPREFIX="production_NVT"
 PRODINFILE="${PRODPREFIX}.in"
 
+echo "heatup duration: ${HEATUP_TIME_NS} ns, time steps: ${HEATUP_TIME_STEPS}"
+echo "equi duration: ${EQUI_TIME_NS} ns, time steps: ${EQUI_TIME_STEPS}"
+echo "prod duration: ${PROD_TIME_NS} ns, time steps: ${PROD_TIME_STEPS}"
 
 # MINIMIZATION
 # ============================================================================
@@ -123,10 +151,8 @@ check_delete ${MIN2FILE}
 echo "Writing minimization input file ${MIN1FILE} ..."
 echo "minimization 1
 http://ambermd.org/tutorials/basic/tutorial1/section5.htm
-Our minimization procedure will consist of a two stage approach.
-In the first stage we will keep the SOLUTE fixed and just minimize
-the positions of the water and ions. Then in the second stage we
-will minimize the entire system.
+Two stage approach. First stage: solute fixed, minimize the water and ions.
+Second stage: minimize the entire system.
 
 steepest descent: ncyc, conjugate gradient: maxcyc-ncyc
 ntb=1: periodic boundary conditions
@@ -147,20 +173,12 @@ ntr=1: restraints
 
 echo "Writing minimization input file ${MIN2FILE} ..."
 echo "Minimization 2
-http://ambermd.org/tutorials/basic/tutorial1/section5.htm
-Our minimization procedure will consist of a two stage approach.
-In the first stage we will keep the SOLUTE fixed and just minimize
-the positions of the water and ions. Then in the second stage we
-will minimize the entire system.
-
-Additional Heparin torsional restraints.
 
 &cntrl
  imin = 1,
  maxcyc = 2500,
  ncyc = 1000,
  ntb = 1,
- ntr = 0,
  cut = 8.0,
 /
 " > ${MIN2FILE}
@@ -172,9 +190,8 @@ echo
 echo "content of ${MIN2FILE}:"
 cat ${MIN2FILE}
 
-
 echo "Running first minimization (fixed solute)..."
-CMD="time ${ENGINE} -O -i ${MIN1FILE} -o ${MIN1PREFIX}.out -p ${PRMTOP} \
+CMD="time ${CPUENGINE} -O -i ${MIN1FILE} -o ${MIN1PREFIX}.out -p ${PRMTOP} \
      -c ${INITCRD} -r ${MIN1PREFIX}.rst -ref ${INITCRD}"
 print_run_command "${CMD}"
 if [ $? != 0 ]; then
@@ -301,7 +318,7 @@ ntwr: restart file
  temp0 = 300.0, ntt = 3, gamma_ln = 1.0,
  nstlim = ${EQUI_TIME_STEPS}, dt = 0.002,
  ntpr = 2000,
- ntwx = 1000,
+ ntwx = 2000,
  ntwr = 100000,
  ioutfm = 1,
 /
@@ -374,7 +391,7 @@ ntwr: restart file
  temp0 = 300.0, ntt = 1, tautp = 10.0,
  nstlim = ${PROD_TIME_STEPS}, dt = 0.002,
  ntpr = 2000,
- ntwx = 1000,
+ ntwx = 2000,
  ntwr = 100000,
  ioutfm = 1,
 /
