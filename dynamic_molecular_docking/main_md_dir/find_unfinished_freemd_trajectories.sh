@@ -59,7 +59,7 @@ for LIGDIR in ligand_*; do
             cd "$FREEMDDIR"
         else
             log "Dir '$FREEMDDIR' not in '${LIGDIR}/${TMDDIR}'"
-            continue
+            cd ..; continue
         fi
         if [ ! -f "${FREEMDOUTFILE}" ]; then
             log "${PWD}: no ${FREEMDOUTFILE}."
