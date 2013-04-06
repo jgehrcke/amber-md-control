@@ -48,6 +48,13 @@ print_run_command () {
     echo
     }
 
+check_command () {
+    command -v "${1}"
+    if [ $? -ne 0 ]; then
+        err "Command '${1}' not found. Exit."
+        exit 1
+    fi
+    }
 
 # check number of given arguments:
 if [ $# != 5 ]; then
@@ -68,13 +75,14 @@ OUTPDB="$5"
 
 
 if [ -f "${OUTPDB}" ]; then
-    err "${MDDIR}/${OUTPDB} already exists. exit."
-    exit 1
+    err "${MDDIR}/${OUTPDB} already exists. Exit with returncode 0."
+    exit 0
 fi
 
 
 check_required "${PRMTOP}"
 check_required "${TRAJFILE}"
+check_command cpptraj
 
 log "which cpptraj: $(which cpptraj)"
 log "cpptraj: extract PDB from $(pwd)/${TRAJFILE}, frameselection '${FRAMESELECTION}', strip '${AMBMASK}'"
