@@ -13,15 +13,25 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-# Exit script upon first error.
-set -e
-
+# Set up environment for Amber.
 AMBER_SETUP="/projects/bioinfp_apps/amber12_centos58_intel1213_openmpi16_cuda5/setup.sh"
+MODULE_TEST_OUTPUT=$(command -v module) # valid on ZIH
+if [ $? -eq 0 ]; then
+    echo "Try loading ZIH module amber/12"
+    module load amber/12
+else
+    echo "Sourcing $AMBER_SETUP"
+    source "${AMBER_SETUP}"
+fi
 
 # Define MD timings. Boundary condition: MD time step of 2 fs.
 HEATUP_TIME_NS="0.02"
-EQUI_TIME_NS="0.4"
-#PROD_TIME_NS="0.03"
+EQUI_TIME_NS="0.5"
+#PROD_TIME_NS="25"
+
+HEATUP_TIME_STEPS=$(python -c "print int(${HEATUP_TIME_NS}*1000000*0.5)")
+EQUI_TIME_STEPS=$(python -c "print int(${EQUI_TIME_NS}*1000000*0.5)")
+#PROD_TIME_STEPS=$(python -c "print int(${PROD_TIME_NS}*1000000*0.5)")
 
 err() {
     # Print error message to stderr.
@@ -52,11 +62,11 @@ print_run_command () {
 
 # Check number of given arguments:
 if [ $# -le 2 ]; then
-    err "Usage: ${SCRIPTNAME} prmtopfile coordfile n_cpus4min [gpu_id]"
+    err "Usage: ${SCRIPTNAME} prmtopfile coordfile n_cpus [gpu_id]"
     err "1st argument: the prmtop file of the system to minimize."
     err "2nd argument: the initial coord file of the system to minimize."
-    err "3rd argument: the number of CPUs to use during minimization."
-    err "4th argument: GPU ID (optional)"
+    err "3rd argument: the number of CPUs to use (for minimization in case of GPU)."
+    err "4th argument: GPU ID (optional in case of GPU) or 'cpu' (runs all steps on CPU)"
     exit 1
 fi
 
@@ -72,16 +82,32 @@ test_number() {
     fi
     }
 
-test_number "${CPUS4MIN}"
+# The third argument must in any case be a number.
+test_number "${NCPUS}"
 
+# ENGINE can bei either GPU or CPU engine. Set default here.
+ENGINE="pmemd.cuda"
+CPUENGINE="mpirun -np ${NCPUS} pmemd.MPI"
+
+# GPUID is either not set (default GPU), a number (use *that* GPU) or 'cpu'.
 if [ -z "$GPUID" ]; then
     GPUID="none"
 else
-    test_number "${GPUID}"
+    if [[ "${GPUID}" == "cpu" ]]; then
+        # Use CPU engine as default engine, mark GPUID as being useless.
+        ENGINE="${CPUENGINE}"
+        GPUID="none"
+    else
+        test_number "${GPUID}"
+    fi
 fi
 
+# Useful debug output.
 echo "Hostname: $(hostname)"
 echo "Current working directory: $(pwd)"
+if [ ${PBS_JOBID+x} ]; then
+    echo "PBS_JOBID is set ('${PBS_JOBID}')"
+fi
 
 if [[ "${GPUID}" != "none" ]]; then
     echo "Setting CUDA_VISIBLE_DEVICES to ${GPUID}."
@@ -94,9 +120,7 @@ else
     fi
 fi
 
-# Define executables and file names.
-CUDAENGINE="pmemd.cuda"
-CPUENGINE="mpirun -np ${CPUS4MIN} pmemd.MPI"
+
 MIN1PREFIX="min1"
 MIN2PREFIX="min2"
 MIN1FILE="${MIN1PREFIX}.in"
@@ -105,8 +129,7 @@ HEATPREFIX="heatup_NVT"
 HEATINFILE="${HEATPREFIX}.in"
 EQUIPREFIX="equilibrate_NPT"
 EQUIINFILE="${EQUIPREFIX}.in"
-PRODPREFIX="production_NVT"
-PRODINFILE="${PRODPREFIX}.in"
+
 
 # Check for existance of DMD-related files.
 check_required_file core_atom_id
@@ -114,28 +137,26 @@ check_required_file ligand_center_atom_id
 CORE_ATOM_ID=$(cat core_atom_id)
 LIGAND_CENTER_ATOM_ID=$(cat ligand_center_atom_id)
 
-HEATUP_TIME_STEPS=$(python -c "print int(${HEATUP_TIME_NS}*1000000*0.5)")
-EQUI_TIME_STEPS=$(python -c "print int(${EQUI_TIME_NS}*1000000*0.5)")
-#PROD_TIME_STEPS=$(python -c "print int(${PROD_TIME_NS}*1000000*0.5)")
 echo "heatup time: ${HEATUP_TIME_NS} ns, time steps: ${HEATUP_TIME_STEPS}"
 echo "equi time: ${EQUI_TIME_NS} ns, time steps: ${EQUI_TIME_STEPS}"
 #echo "prod time: ${PROD_TIME_NS}, time steps: ${PROD_TIME_STEPS}"
 
-echo "Sourcing $AMBER_SETUP"
-source "${AMBER_SETUP}"
 
-if [ -f gaginternal.rest ]; then
-    ADDITIONALREST="
+RESTRAINTS_FILE="dmd_min_heat_equi.rest"
+if [ -f ${RESTRAINTS_FILE} ]; then
+    echo "$RESTRAINTS_FILE found. Use it in MD input files, set nmropt=1."
+    NMRREST="
 &wt type='END'   /
-DISANG=gaginternal.rest
+DISANG=${RESTRAINTS_FILE}
 LISTIN=POUT
 LISTOUT=POUT
 "
     NMROPT="1"
 else
-    ADDITIONALREST=""
+    NMRREST=""
     NMROPT="0"
 fi
+
 
 #                               MINIMIZATION
 # ============================================================================
@@ -171,7 +192,8 @@ ntr=1: restraints
  ig = -1
  restraint_wt = 500.0,
  restraintmask = \"!:WAT\",
-/
+ nmropt = ${NMROPT},
+/${NMRREST}
 " > ${MIN1FILE}
 
 echo "Writing minimization input file ${MIN2FILE} ..."
@@ -192,7 +214,7 @@ Additional Heparin torsional restraints.
  ntr = 0,
  cut = 8.0,
  nmropt = ${NMROPT},
-/${ADDITIONALREST}
+/${NMRREST}
 " > ${MIN2FILE}
 
 
@@ -277,9 +299,10 @@ N=10000 -> 20 ps
  ioutfm = 1,
  ig = -1,
  ntr = 1,
- restraint_wt = 30.0,
+ restraint_wt = 5.0,
  restraintmask = \"!:WAT\",
-/
+ nmropt = ${NMROPT},
+/${NMRREST}
 " > ${HEATINFILE}
 echo
 echo "content of ${HEATINFILE}:"
@@ -341,9 +364,7 @@ Internal GAG restraints only if gaginternal.rest ist available.
  ntpr = 500, ntwx = 500, ntwr = 10000,
  ioutfm = 1,
  nmropt = ${NMROPT},
- restraint_wt = 200.0,
- restraintmask = \"@${CORE_ATOM_ID},${LIGAND_CENTER_ATOM_ID}\",
-/${ADDITIONALREST}
+/${NMRREST}
 " > ${EQUIINFILE}
 echo
 echo "content of ${EQUIINFILE}:"
