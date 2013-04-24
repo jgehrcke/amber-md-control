@@ -25,13 +25,11 @@ else
 fi
 
 # Define MD timings. Boundary condition: MD time step of 2 fs.
+# Default within DMD run: 20 ps for heatup (0.02 ns).
 HEATUP_TIME_NS="0.02"
-EQUI_TIME_NS="0.5"
-#PROD_TIME_NS="25"
+# Default within DMD run: 0.4 ns for equilibration.
+EQUI_TIME_NS="0.4"
 
-HEATUP_TIME_STEPS=$(python -c "print int(${HEATUP_TIME_NS}*1000000*0.5)")
-EQUI_TIME_STEPS=$(python -c "print int(${EQUI_TIME_NS}*1000000*0.5)")
-#PROD_TIME_STEPS=$(python -c "print int(${PROD_TIME_NS}*1000000*0.5)")
 
 err() {
     # Print error message to stderr.
@@ -57,7 +55,7 @@ check_required_file () {
 print_run_command () {
     echo "Running command:"
     echo "${1}"
-    ${1}
+    eval "${1}"
     }
 
 # Check number of given arguments:
@@ -95,10 +93,10 @@ if [ -z "$GPUID" ]; then
 else
     if [[ "${GPUID}" == "cpu" ]]; then
         # Use CPU engine as default engine, mark GPUID as being useless.
-        ENGINE="${CPUENGINE}"
+        ENGINE="$CPUENGINE"
         GPUID="none"
     else
-        test_number "${GPUID}"
+        test_number "$GPUID"
     fi
 fi
 
@@ -137,10 +135,10 @@ check_required_file ligand_center_atom_id
 CORE_ATOM_ID=$(cat core_atom_id)
 LIGAND_CENTER_ATOM_ID=$(cat ligand_center_atom_id)
 
+HEATUP_TIME_STEPS=$(python -c "print int(${HEATUP_TIME_NS}*1000000*0.5)")
+EQUI_TIME_STEPS=$(python -c "print int(${EQUI_TIME_NS}*1000000*0.5)")
 echo "heatup time: ${HEATUP_TIME_NS} ns, time steps: ${HEATUP_TIME_STEPS}"
 echo "equi time: ${EQUI_TIME_NS} ns, time steps: ${EQUI_TIME_STEPS}"
-#echo "prod time: ${PROD_TIME_NS}, time steps: ${PROD_TIME_STEPS}"
-
 
 RESTRAINTS_FILE="dmd_min_heat_equi.rest"
 if [ -f ${RESTRAINTS_FILE} ]; then
@@ -172,19 +170,17 @@ check_delete ${MIN2FILE}
 
 echo "Writing minimization input file ${MIN1FILE} ..."
 echo "minimization 1
+Minimization according to
 http://ambermd.org/tutorials/basic/tutorial1/section5.htm
-Our minimization procedure will consist of a two stage approach.
-In the first stage we will keep the SOLUTE fixed and just minimize
-the positions of the water and ions. Then in the second stage we
-will minimize the entire system.
 
-steepest descent: ncyc, conjugate gradient: maxcyc-ncyc
+I) steepest descent: ncyc,
+II) conjugate gradient: maxcyc-ncyc
 ntb=1: periodic boundary conditions
 ntr=1: restraints
 
 &cntrl
  imin = 1,
- maxcyc = 1500,
+ maxcyc = 1000,
  ncyc = 500,
  ntb = 1,
  ntr = 1,
@@ -198,18 +194,15 @@ ntr=1: restraints
 
 echo "Writing minimization input file ${MIN2FILE} ..."
 echo "Minimization 2
+Minimization according to
 http://ambermd.org/tutorials/basic/tutorial1/section5.htm
-Our minimization procedure will consist of a two stage approach.
-In the first stage we will keep the SOLUTE fixed and just minimize
-the positions of the water and ions. Then in the second stage we
-will minimize the entire system.
 
 Additional Heparin torsional restraints.
 
 &cntrl
  imin = 1,
- maxcyc = 2500,
- ncyc = 1000,
+ maxcyc = 700,
+ ncyc = 700,
  ntb = 1,
  ntr = 0,
  cut = 8.0,
@@ -237,7 +230,7 @@ if [ $? != 0 ]; then
     exit 1
 fi
 echo "Running second minimization (entire system is flexible)..."
-CMD="time ${CUDAENGINE} -O -i ${MIN2FILE} -o ${MIN2PREFIX}.out -p ${PRMTOP} \
+CMD="time ${ENGINE} -O -i ${MIN2FILE} -o ${MIN2PREFIX}.out -p ${PRMTOP} \
      -c ${MIN1PREFIX}.rst -r ${MIN2PREFIX}.rst -ref ${INITCRD}"
 print_run_command "${CMD}"
 if [ $? != 0 ]; then
@@ -308,7 +301,7 @@ echo
 echo "content of ${HEATINFILE}:"
 cat ${HEATINFILE}
 echo "Running heatup..."
-CMD="time ${CUDAENGINE} -O -i ${HEATINFILE} -o ${HEATPREFIX}.out -p ${PRMTOP} \
+CMD="time ${ENGINE} -O -i ${HEATINFILE} -o ${HEATPREFIX}.out -p ${PRMTOP} \
      -c ${MIN2PREFIX}.rst -r ${HEATPREFIX}.rst -x ${HEATPREFIX}.mdcrd \
      -ref ${MIN2PREFIX}.rst"
 print_run_command "${CMD}"
@@ -371,7 +364,7 @@ echo "content of ${EQUIINFILE}:"
 cat ${EQUIINFILE}
 
 echo "Running equilibration..."
-CMD="time ${CUDAENGINE} -O -i ${EQUIINFILE} -o ${EQUIPREFIX}.out -p ${PRMTOP} \
+CMD="time ${ENGINE} -O -i ${EQUIINFILE} -o ${EQUIPREFIX}.out -p ${PRMTOP} \
      -c ${HEATPREFIX}.rst -r ${EQUIPREFIX}.rst -x ${EQUIPREFIX}.mdcrd"
 # deleted -ref initcoords.crd"
 print_run_command "${CMD}"
