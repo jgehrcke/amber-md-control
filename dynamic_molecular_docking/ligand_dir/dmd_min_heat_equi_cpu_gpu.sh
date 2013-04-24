@@ -72,12 +72,12 @@ fi
 
 PRMTOP="$1"
 INITCRD="$2"
-CPUS4MIN="$3"
+NCPUS="$3"
 GPUID="$4"
 
 test_number() {
     if ! [[ "${1}" =~ ^[0-9]+$ ]] ; then
-        err "Not a number: ${1}. Exit."
+        err "Not a number: '${1}'. Exit."
         exit 1
     fi
     }
