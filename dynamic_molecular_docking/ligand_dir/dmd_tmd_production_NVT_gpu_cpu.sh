@@ -173,13 +173,14 @@ else
 fi
 
 
-
 echo "tMD duration: ${TMD_TIME_NS} ns, number of time steps: ${TMD_TIME_STEPS}"
 echo "Writing input file ${PRODINFILE}."
 echo "
 NVT production for N ns at 300 K.
-This is a restart simulation (irest=1). Coords, velocities and box
-information are read from inpcrd file (ntx=5).
+
+Don't read velocities from equilibration restart file (irest=0, ntx=1).
+Initial velocities are assigned randomly, so that each of these simulations
+produces a different trajectory.
 
 ntb=1: constant volume periodic boundary conditions
 ntc/ntf=2: SHAKE on hydrogens
@@ -200,15 +201,11 @@ simulations.
 t ns simulation time at 2 fs = 0.002 ps time step requires N steps:
 N = t * 10**-9 s / (0.002 * 10**-12 s) = 500000 * t
 
-e.g. 16500000 steps -> 33 ns
-e.g. 19000000 steps -> 38 ns
-e.g.  5000000 steps -> 10 ns
-
-ig: random seed
-ioutfm=1: write binary (NetCDF) trajectory
-ntxo = 2: NetCDF restart files
-
 ${TMD_TIME_NS} ns (${TMD_TIME_STEPS} steps) of tMD
+ig: unse random random seed
+ioutfm=1: write binary (NetCDF) trajectory
+ntxo = 2: write NetCDF restart files
+
 
 &cntrl
  ntx = 1,
@@ -238,14 +235,12 @@ echo "Content of ${PRODINFILE}:"
 cat ${PRODINFILE}
 
 echo "Starting tMD production..."
-#echo "sourcing  /apps11/bioinfp/amber11_centos5_intel1213_openmpi15/setup.sh"
-#source  /apps11/bioinfp/amber11_centos5_intel1213_openmpi15/setup.sh
-#module load amber/11
-CMD="time ${ENGINE} -O -i ${PRODINFILE} -o ${PRODPREFIX}.out -p ${TOPOLOGYFILE} -c ${EQUI_RESTART_FILE} -r ${PRODPREFIX}.rst -x ${PRODPREFIX}.mdcrd"
+CMD="time ${ENGINE} -O -i ${PRODINFILE} -o ${PRODPREFIX}.out -p ${TOPOLOGYFILE} \
+    -c ${EQUI_RESTART_FILE} -r ${PRODPREFIX}.rst -x ${PRODPREFIX}.mdcrd"
 print_run_command "${CMD}"
 
 if [ $? != 0 ]; then
-    echo "Error during tMD production. exit."
+    echo "Error during tMD production. Exit."
     exit 1
 fi
 echo "tMD finished."
