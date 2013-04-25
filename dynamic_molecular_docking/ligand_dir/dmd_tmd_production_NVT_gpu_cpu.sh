@@ -152,25 +152,22 @@ ln -s ../${TOPOLOGYFILE} .
 ln -s ../${TMD_RESTRAINT_FILE} .
 ln -s ../${EQUI_RESTART_FILE} .
 
-if [ -f ${TMD_RESTRAINT_FILE} ]; then
-    echo " >> $TMD_RESTRAINT_FILE found."
-    echo " >> Replacing %TMD_TIME_STEPS%."
-    CMD="sed -i 's/%TMD_TIME_STEPS%/${TMD_TIME_STEPS}/g' "${TMD_RESTRAINT_FILE}""
-    print_run_command "${CMD}"
-    echo " >> Restraint file content:"
-    cat "$TMD_RESTRAINT_FILE"
-    echo " >> Use it in MD input files, set nmropt=1."
-    NMRREST="
+# NMR restraint handling.
+echo " >> $TMD_RESTRAINT_FILE found."
+echo " >> Replacing %TMD_TIME_STEPS%."
+CMD="sed -i 's/%TMD_TIME_STEPS%/${TMD_TIME_STEPS}/g' "${TMD_RESTRAINT_FILE}""
+print_run_command "${CMD}"
+echo " >> Restraint file content:"
+cat "$TMD_RESTRAINT_FILE"
+echo " >> Use it in MD input files, set nmropt=1."
+NMRREST="
 &wt type='END'   /
 DISANG=${TMD_RESTRAINT_FILE}
 LISTIN=POUT
 LISTOUT=POUT
 "
-    NMROPT="1"
-else
-    NMRREST=""
-    NMROPT="0"
-fi
+NMROPT="1"
+
 
 
 echo "tMD duration: ${TMD_TIME_NS} ns, number of time steps: ${TMD_TIME_STEPS}"
