@@ -31,7 +31,7 @@ TOPOLOGYFILE="top.prmtop"
 PRODPREFIX="dmd_tmd_NVT"
 PRODINFILE="${PRODPREFIX}.in"
 # Define MD duration in ns. Boundary condition: MD time step of 2 fs.
-TMD_TIME_NS="4"
+TMD_TIME_NS="3"
 TMD_TIME_STEPS=$(python -c "print int(${TMD_TIME_NS}*1000000*0.5)")
 
 err() {
@@ -152,6 +152,28 @@ ln -s ../${TOPOLOGYFILE} .
 ln -s ../${TMD_RESTRAINT_FILE} .
 ln -s ../${EQUI_RESTART_FILE} .
 
+if [ -f ${TMD_RESTRAINT_FILE} ]; then
+    echo " >> $TMD_RESTRAINT_FILE found."
+    echo " >> Replacing %TMD_TIME_STEPS%."
+    CMD="sed -i 's/%TMD_TIME_STEPS%/${TMD_TIME_STEPS}/g' "${TMD_RESTRAINT_FILE}""
+    print_run_command "${CMD}"
+    echo " >> Restraint file content:"
+    cat "$TMD_RESTRAINT_FILE"
+    echo " >> Use it in MD input files, set nmropt=1."
+    NMRREST="
+&wt type='END'   /
+DISANG=${TMD_RESTRAINT_FILE}
+LISTIN=POUT
+LISTOUT=POUT
+"
+    NMROPT="1"
+else
+    NMRREST=""
+    NMROPT="0"
+fi
+
+
+
 echo "tMD duration: ${TMD_TIME_NS} ns, number of time steps: ${TMD_TIME_STEPS}"
 echo "Writing input file ${PRODINFILE}."
 echo "
@@ -207,15 +229,8 @@ ${TMD_TIME_NS} ns (${TMD_TIME_STEPS} steps) of tMD
  ioutfm = 1,
  ntxo = 2,
  ig = -1,
- jar = 1,
-/
-&wt type='DUMPFREQ', istep1=100, /
-&wt type='END', /
-DISANG=${TMD_RESTRAINT_FILE}
-DUMPAVE=smd.out
-LISTIN=POUT
-LISTOUT=POUT
-/
+ nmropt = ${NMROPT},
+/${NMRREST}
 " > ${PRODINFILE}
 
 echo
