@@ -24,7 +24,7 @@ else
     source "${AMBER_SETUP}"
 fi
 
-# Define MD timings. Boundary condition: MD time step of 2 fs.
+# Define MD timings in ns. Boundary condition: MD time step of 2 fs.
 HEATUP_TIME_NS="0.02"
 EQUI_TIME_NS="0.5"
 PROD_TIME_NS="10"
@@ -57,7 +57,14 @@ check_required () {
 print_run_command () {
     echo "Running command:"
     echo "${1}"
-    ${1}
+    eval "${1}"
+    }
+
+test_number() {
+    if ! [[ "${1}" =~ ^[0-9]+$ ]] ; then
+        err "Not a number: '${1}'. Exit."
+        exit 1
+    fi
     }
 
 SCRIPTNAME="$(basename "$0")"
@@ -76,13 +83,6 @@ PRMTOP="$1"
 INITCRD="$2"
 NCPUS="$3"
 GPUID="$4"
-
-test_number() {
-    if ! [[ "${1}" =~ ^[0-9]+$ ]] ; then
-        err "Not a number: ${1}. Exit."
-        exit 1
-    fi
-    }
 
 # The third argument must in any case be a number.
 test_number "${NCPUS}"
@@ -141,6 +141,21 @@ echo "heatup duration: ${HEATUP_TIME_NS} ns, time steps: ${HEATUP_TIME_STEPS}"
 echo "equi duration: ${EQUI_TIME_NS} ns, time steps: ${EQUI_TIME_STEPS}"
 echo "prod duration: ${PROD_TIME_NS} ns, time steps: ${PROD_TIME_STEPS}"
 
+RESTRAINTS_FILE="dmd_freemd.rest"
+if [ -f ${RESTRAINTS_FILE} ]; then
+    echo "$RESTRAINTS_FILE found. Use it in MD input files, set nmropt=1."
+    NMRREST="
+&wt type='END'   /
+DISANG=${RESTRAINTS_FILE}
+LISTIN=POUT
+LISTOUT=POUT
+"
+    NMROPT="1"
+else
+    NMRREST=""
+    NMROPT="0"
+fi
+
 
 # MINIMIZATION
 # ============================================================================
@@ -154,20 +169,18 @@ check_delete ${MIN1FILE}
 check_delete ${MIN2FILE}
 echo "Writing minimization input file ${MIN1FILE} ..."
 echo "minimization 1
+Minimization according to
 http://ambermd.org/tutorials/basic/tutorial1/section5.htm
-Our minimization procedure will consist of a two stage approach.
-In the first stage we will keep the SOLUTE fixed and just minimize
-the positions of the water and ions. Then in the second stage we
-will minimize the entire system.
 
-steepest descent: ncyc, conjugate gradient: maxcyc-ncyc
+I) steepest descent: ncyc,
+II) conjugate gradient: maxcyc-ncyc
 ntb=1: periodic boundary conditions
 ntr=1: restraints
 
 &cntrl
  imin = 1,
- maxcyc = 1500,
- ncyc = 500,
+ maxcyc = 1000,
+ ncyc = 400,
  ntb = 1,
  ntr = 1,
  cut = 8.0
@@ -175,28 +188,27 @@ ntr=1: restraints
  ntxo = 2,
  restraint_wt = 500.0,
  restraintmask = \"!:WAT\",
-/
+ nmropt = ${NMROPT},
+/${NMRREST}
 " > ${MIN1FILE}
 
 echo "Writing minimization input file ${MIN2FILE} ..."
 echo "Minimization 2
+Minimization according to
 http://ambermd.org/tutorials/basic/tutorial1/section5.htm
-Our minimization procedure will consist of a two stage approach.
-In the first stage we will keep the SOLUTE fixed and just minimize
-the positions of the water and ions. Then in the second stage we
-will minimize the entire system.
 
 Additional Heparin torsional restraints.
 
 &cntrl
  imin = 1,
- maxcyc = 2500,
- ncyc = 1000,
+ maxcyc = 1000,
+ ncyc = 400,
  ntb = 1,
  ntr = 0,
- ntxo = 2, 
  cut = 8.0,
-/
+ ntxo = 2,
+ nmropt = ${NMROPT},
+/${NMRREST}
 " > ${MIN2FILE}
 
 echo
