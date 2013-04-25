@@ -48,7 +48,7 @@ print_run_command () {
 # Test validity of arguments.
 test_number() {
     if ! [[ "${1}" =~ ^[0-9]+$ ]] ; then
-        err "Not a number: ${1}. Exit."
+        err "Not a number: '${1}'. Exit."
         exit 1
     fi
     }    
@@ -106,7 +106,6 @@ if [[ "${GPUCPU}" == "gpu" ]]; then
     fi
 elif [[ "${GPUCPU}" == "cpu" ]]; then
     echo "Setting up tMD on ${NUMBER} CPU cores."
-
     if [[ "${CPUNUMBER}" == "none" ]]; then
         err "When using option 'cpu', the number of CPUs must be provided."
         exit 1
@@ -148,10 +147,10 @@ fi
 
 echo "Linking required files to current working directory: $PWD"
 
-# ${TOPOLOGYFILE} etc are guaranteed to be one dir level higher.
-ln -s ../${TOPOLOGYFILE} ${TOPOLOGYFILE}
-ln -s ../${TMD_RESTRAINT_FILE} ${TMD_RESTRAINT_FILE}
-ln -s ../${EQUI_RESTART_FILE} ${EQUI_RESTART_FILE}
+# ${TOPOLOGYFILE} etc are guaranteed to be one directory level higher.
+ln -s ../${TOPOLOGYFILE} .
+ln -s ../${TMD_RESTRAINT_FILE} .
+ln -s ../${EQUI_RESTART_FILE} .
 
 echo "tMD duration: ${TMD_TIME_NS} ns, number of time steps: ${TMD_TIME_STEPS}"
 echo "Writing input file ${PRODINFILE}."
