@@ -57,9 +57,15 @@ DMDPRODRESTFILE_CONTENT="
 # tMD time-dependent distance restraint (SMD / jar=1 implementation)
 &rst
     iat=${CORE_ATOM_ID}, ${LIGAND_CENTER_ATOM_ID},
-    r2=${INITIAL_DISTANCE},
-    r2a=${CORE_CENTER_TARGET_DISTANCE},
+    ifvari=1,
+    nstep1=0,
+    nstep2=%TMD_TIME_STEPS%,
+    r1=$(python -c "print ${INITIAL_DISTANCE}-5"), r2=${INITIAL_DISTANCE}, r3=${INITIAL_DISTANCE}, r4=$(python -c "print ${INITIAL_DISTANCE}+5"),
+    r1a=$(python -c "print ${CORE_CENTER_TARGET_DISTANCE}-5"), r2a=${CORE_CENTER_TARGET_DISTANCE}, r3a=${CORE_CENTER_TARGET_DISTANCE}, r4a=$(python -c "print ${CORE_CENTER_TARGET_DISTANCE}+5"),
     rk2=100,
+    rk2a=100,
+    rk3=100,
+    rk3a=100,
 &end
 "
 echo "${DMDPRODRESTFILE_CONTENT}" > ${DMDPRODRESTFILENAME}
