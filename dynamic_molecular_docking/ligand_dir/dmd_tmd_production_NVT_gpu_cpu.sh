@@ -184,6 +184,7 @@ e.g.  5000000 steps -> 10 ns
 
 ig: random seed
 ioutfm=1: write binary (NetCDF) trajectory
+ntxo = 2: NetCDF restart files
 
 ${TMD_TIME_NS} ns (${TMD_TIME_STEPS} steps) of tMD
 
@@ -204,6 +205,7 @@ ${TMD_TIME_NS} ns (${TMD_TIME_STEPS} steps) of tMD
  ntwx = 2000,
  ntwr = 100000,
  ioutfm = 1,
+ ntxo = 2,
  ig = -1,
  jar = 1,
 /

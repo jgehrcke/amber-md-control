@@ -186,6 +186,7 @@ ntr=1: restraints
  ntr = 1,
  cut = 8.0
  ig = -1
+ ntxo = 2,
  restraint_wt = 500.0,
  restraintmask = \"!:WAT\",
  nmropt = ${NMROPT},
@@ -206,6 +207,7 @@ Additional Heparin torsional restraints.
  ntb = 1,
  ntr = 0,
  cut = 8.0,
+ ntxo = 2,
  nmropt = ${NMROPT},
 /${NMRREST}
 " > ${MIN2FILE}
@@ -290,6 +292,7 @@ N=10000 -> 20 ps
  nstlim = ${HEATUP_TIME_STEPS}, dt = 0.002,
  ntpr = 500, ntwx = 500, ntwr = 10000,
  ioutfm = 1,
+ ntxo = 2,
  ig = -1,
  ntr = 1,
  restraint_wt = 5.0,
@@ -356,6 +359,7 @@ Internal GAG restraints only if gaginternal.rest ist available.
  nstlim = ${EQUI_TIME_STEPS}, dt = 0.002,
  ntpr = 500, ntwx = 500, ntwr = 10000,
  ioutfm = 1,
+ ntxo = 2,
  nmropt = ${NMROPT},
 /${NMRREST}
 " > ${EQUIINFILE}
