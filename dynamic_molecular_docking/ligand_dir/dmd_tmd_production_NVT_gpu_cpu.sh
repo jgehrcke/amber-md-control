@@ -13,15 +13,24 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-# Exit script upon first error.
-set -e
 
+# Set up environment for Amber.
 AMBER_SETUP="/projects/bioinfp_apps/amber12_centos58_intel1213_openmpi16_cuda5/setup.sh"
+MODULE_TEST_OUTPUT=$(command -v module) # valid on ZIH
+if [ $? -eq 0 ]; then
+    echo "Try loading ZIH module amber/12"
+    module load amber/12
+else
+    echo "Sourcing $AMBER_SETUP"
+    source "${AMBER_SETUP}"
+fi
+
 EQUI_RESTART_FILE="equilibrate_NPT.rst"
 TMD_RESTRAINT_FILE="dmd_tmd.rest"
 TOPOLOGYFILE="top.prmtop"
 PRODPREFIX="dmd_tmd_NVT"
 PRODINFILE="${PRODPREFIX}.in"
+# Define MD duration in ns. Boundary condition: MD time step of 2 fs.
 TMD_TIME_NS="4"
 TMD_TIME_STEPS=$(python -c "print int(${TMD_TIME_NS}*1000000*0.5)")
 
@@ -29,6 +38,36 @@ err() {
     # Print error message to stderr.
     echo "$@" 1>&2;
     }
+
+print_run_command () {
+    echo "Running command:"
+    echo "${1}"
+    eval "${1}"
+    }
+    
+# Test validity of arguments.
+test_number() {
+    if ! [[ "${1}" =~ ^[0-9]+$ ]] ; then
+        err "Not a number: ${1}. Exit."
+        exit 1
+    fi
+    }    
+
+# Check if all required files are available.
+check_required () {
+    if [ ! -f $1 ]; then
+       err "File $1 is required and does not exist. exit."
+       exit 1
+    fi
+    }
+
+# Check if path is directly in current dir, i.e. does not contain slash
+check_in_this_dir () {
+    if [[ "${1}" == */* ]]; then
+        err "${1} must not contain slashes."
+        exit 1
+    fi
+}
 
 # Check number of arguments, define help message.
 SCRIPTNAME="$(basename "$0")"
@@ -43,14 +82,6 @@ fi
 OUTDIR="$1"
 GPUCPU="$2"
 NUMBER="$3"
-
-# Test validity of arguments.
-test_number() {
-    if ! [[ "${1}" =~ ^[0-9]+$ ]] ; then
-        err "Not a number: ${1}. Exit."
-        exit 1
-    fi
-    }
 
 if [ -z "$NUMBER" ]; then
     GPUID="none"
@@ -94,22 +125,6 @@ if [ ${PBS_JOBID+x} ]; then
     echo "PBS_JOBID is set ('${PBS_JOBID}')"
 fi
 
-# Check if all required files are available.
-check_required () {
-    if [ ! -f $1 ]; then
-       err "File $1 is required and does not exist. exit."
-       exit 1
-    fi
-    }
-
-# Check if path is directly in current dir, i.e. does not contain slash
-check_in_this_dir () {
-    if [[ "${1}" == */* ]]; then
-        err "${1} must not contain slashes."
-        exit 1
-    fi
-}
-
 check_required ${TMD_RESTRAINT_FILE}
 check_required ${EQUI_RESTART_FILE}
 check_required ${TOPOLOGYFILE}
@@ -129,13 +144,6 @@ mkdir ${OUTDIR} && cd ${OUTDIR}
 if [ $? != 0 ]; then
     err "Error while creating/entering output directory. Exit."
     exit 1
-fi
-
-echo "Try loading ZIH module amber/12"
-module load amber/12 # valid on ZIH
-if [ $? -ne 0 ]; then
-    echo "Sourcing $AMBER_SETUP"
-    source "${AMBER_SETUP}"
 fi
 
 echo "Linking required files to current working directory: $PWD"
@@ -212,12 +220,6 @@ LISTOUT=POUT
 echo
 echo "Content of ${PRODINFILE}:"
 cat ${PRODINFILE}
-
-print_run_command () {
-    echo "running command:"
-    echo "${1}"
-    ${1}
-    }
 
 echo "Starting tMD production..."
 #echo "sourcing  /apps11/bioinfp/amber11_centos5_intel1213_openmpi15/setup.sh"
