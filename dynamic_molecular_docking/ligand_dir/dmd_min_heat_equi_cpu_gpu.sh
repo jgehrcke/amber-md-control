@@ -202,8 +202,8 @@ Additional Heparin torsional restraints.
 
 &cntrl
  imin = 1,
- maxcyc = 700,
- ncyc = 700,
+ maxcyc = 1000,
+ ncyc = 500,
  ntb = 1,
  ntr = 0,
  cut = 8.0,
