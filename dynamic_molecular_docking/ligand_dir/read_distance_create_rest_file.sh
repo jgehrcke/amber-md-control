@@ -9,6 +9,7 @@ CORE_ATOM_ID=$(cat core_atom_id)
 LIGAND_CENTER_ATOM_ID=$(cat ligand_center_atom_id)
 CORE_CENTER_TARGET_DISTANCE=$(cat core_center_target_distance)
 DMDPRODRESTFILENAME="dmd_tmd.rest"
+COMMONRESTFILENAME="dmd_tmd_common.rest"
 DISTANCE_DATA_FILENAME="ligandcenter_protcore_distance.dat"
 EQUITRAJ_FILENAME="equilibrate_NPT.mdcrd"
 CPPTRAJ_INPUT_FILENAME="get_ligandcenter_protcore_distance.ptrajin"
@@ -61,6 +62,10 @@ DMDPRODRESTFILE_CONTENT="
 &end
 "
 echo "${DMDPRODRESTFILE_CONTENT}" > ${DMDPRODRESTFILENAME}
+
+if [ -f "$COMMONRESTFILENAME" ]; then
+    cat "$COMMONRESTFILENAME" >> "$DMDPRODRESTFILENAME"
+fi
 echo "wrote ${DMDPRODRESTFILENAME}: "
-echo "$(cat ${DMDPRODRESTFILENAME})"
+cat "${DMDPRODRESTFILENAME}"
 echo
