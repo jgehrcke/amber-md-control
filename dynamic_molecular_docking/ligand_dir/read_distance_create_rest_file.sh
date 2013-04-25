@@ -54,6 +54,7 @@ echo
 
 INITIAL_DISTANCE=$(cat ${DISTANCE_VALUE_FILENAME})
 DMDPRODRESTFILE_CONTENT="
+# tMD time-dependent distance restraint (SMD / jar=1 implementation)
 &rst
     iat=${CORE_ATOM_ID}, ${LIGAND_CENTER_ATOM_ID},
     r2=${INITIAL_DISTANCE},
@@ -64,8 +65,9 @@ DMDPRODRESTFILE_CONTENT="
 echo "${DMDPRODRESTFILE_CONTENT}" > ${DMDPRODRESTFILENAME}
 
 if [ -f "$COMMONRESTFILENAME" ]; then
+    echo " >> Incorporating $COMMONRESTFILENAME"
     cat "$COMMONRESTFILENAME" >> "$DMDPRODRESTFILENAME"
 fi
-echo "wrote ${DMDPRODRESTFILENAME}: "
+echo " >> Wrote ${DMDPRODRESTFILENAME}: "
 cat "${DMDPRODRESTFILENAME}"
 echo
