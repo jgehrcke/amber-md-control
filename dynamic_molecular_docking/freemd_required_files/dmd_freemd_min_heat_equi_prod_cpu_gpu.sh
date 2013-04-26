@@ -26,7 +26,7 @@ fi
 
 # Define MD timings in ns. Boundary condition: MD time step of 2 fs.
 HEATUP_TIME_NS="0.02"
-EQUI_TIME_NS="0.5"
+EQUI_TIME_NS="0.4"
 PROD_TIME_NS="10"
 
 HEATUP_TIME_STEPS=$(python -c "print int(${HEATUP_TIME_NS}*1000000*0.5)")
@@ -75,7 +75,7 @@ if [ $# -le 2 ]; then
     err "1st argument: the prmtop file of the system to minimize."
     err "2nd argument: the initial coord file of the system to minimize."
     err "3rd argument: the number of CPUs to use (for minimization in case of GPU)."
-    err "4th argument: GPU ID (optional in case of GPU) or 'cpu' (runs all steps on CPU)"
+    err "4th argument: GPU ID (optional in case of GPU) or 'cpu' (runs all steps on CPU)."
     exit 1
 fi
 
@@ -382,7 +382,7 @@ echo "Writing input file ${PRODINFILE} ..."
 echo "
 NVT production for N ns at 300 K.
 This is a restart simulation (irest=1). Coords, velocities and box
-information are read from inpcrd file (ntx=5).
+information are read from inpcrd file (irest=1, ntx=5).
 
 ntb=1: constant volume periodic boundary conditions
 ntc/ntf=2: SHAKE on hydrogens
@@ -443,4 +443,3 @@ if [ $? != 0 ]; then
     exit 1
 fi
 echo "Production finished."
-
