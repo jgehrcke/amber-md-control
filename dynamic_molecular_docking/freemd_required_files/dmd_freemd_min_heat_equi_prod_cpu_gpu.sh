@@ -290,7 +290,8 @@ N=10000 -> 20 ps
  ntr = 1,
  restraint_wt = 10.0,
  restraintmask = \"!:WAT\",
-/
+ nmropt = ${NMROPT},
+/${NMRREST}
 " > ${HEATINFILE}
 echo
 echo "content of ${HEATINFILE}:"
@@ -352,7 +353,8 @@ ntwr: restart file
  ntwr = 100000,
  ioutfm = 1,
  ntxo = 2,
-/
+ nmropt = ${NMROPT},
+/${NMRREST}
 " > ${EQUIINFILE}
 echo
 echo "content of ${EQUIINFILE}:"
@@ -426,7 +428,8 @@ ntwr: restart file
  ntwr = 100000,
  ioutfm = 1,
  ntxo = 2,
-/
+ nmropt = ${NMROPT},
+/${NMRREST}
 " > ${PRODINFILE}
 echo
 echo "content of ${PRODINFILE}:"
