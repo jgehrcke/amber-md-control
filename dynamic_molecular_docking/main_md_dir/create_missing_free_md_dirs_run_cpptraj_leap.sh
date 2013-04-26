@@ -19,6 +19,7 @@ FREEMDDIR="freemd"
 FREEMD_REQUIRED_FILES_DIR="freemd_required_files"
 
 # Set up environment for Amber.
+AMBER_SETUP="/projects/bioinfp_apps/amber12_centos58_intel1213_openmpi16_cuda5/setup.sh"
 MODULE_TEST_OUTPUT=$(command -v module) # valid on ZIH
 if [ $? -eq 0 ]; then
     echo "Try loading ZIH module amber/12"
