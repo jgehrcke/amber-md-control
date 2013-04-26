@@ -175,7 +175,7 @@ http://ambermd.org/tutorials/basic/tutorial1/section5.htm
 I) steepest descent: ncyc,
 II) conjugate gradient: maxcyc-ncyc
 ntb=1: periodic boundary conditions
-ntr=1: restraints
+ntr=1: restraints based on restraint_wt/restraintmask
 
 &cntrl
  imin = 1,
@@ -196,8 +196,6 @@ echo "Writing minimization input file ${MIN2FILE} ..."
 echo "Minimization 2
 Minimization according to
 http://ambermd.org/tutorials/basic/tutorial1/section5.htm
-
-Additional Heparin torsional restraints.
 
 &cntrl
  imin = 1,
@@ -334,8 +332,6 @@ N = 2 * 10**-9 s / (0.002 * 10**-12 s) = 1000000
 
 ioutfm=1: write binary (NetCDF) trajectory
 
-Additional Heparin torsional restraints
-
 ntpr: mdinfo and mdout file
 ntwx: coordinates to trajectory file
 ntwr: restart file
@@ -409,8 +405,6 @@ e.g.  5000000 steps -> 10 ns
 e.g. 10000000 steps -> 20 ns
 
 ioutfm=1: write binary (NetCDF) trajectory
-
-Additional Heparin torsional restraints
 
 ntpr: mdinfo and mdout file
 ntwx: coordinates to trajectory file
