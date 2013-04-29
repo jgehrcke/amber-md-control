@@ -15,6 +15,9 @@
 #   limitations under the License.
 #
 
+# Exit upon first error.
+set -e
+
 err() {
     # Print error message to stderr.
     echo "ERROR >>> $@" 1>&2
@@ -26,21 +29,21 @@ log() {
     }
 
 
-PREFIX="/home/bioinfp/jang/project/md/smd/docking/1bfb/md/atlas_state_120903"
+PREFIX="../06_md"
 
 
 # Run the functions below asynchronously
 
-mov_freemd_last200ps_ligrecrelmov() {
-    PROJECT="mov_freemd_last200ps_ligrecrelmov"
+mov_freemd_last100frames_ligrecrelmov() {
+    PROJECT="mov_freemd_last100frames_ligrecrelmov"
     OUTFILE="${PROJECT}.dat"
     log "Processing ${PROJECT} ..."
     # Overwrite file
     echo "run_id,${PROJECT}_mean,${PROJECT}_stddev" > $OUTFILE
-    find ${PREFIX} -wholename "*SMD_PROD_*/free_md/rmsd_ligand_relative_over_frames_last200ps.dat" | \
+    find ${PREFIX} -wholename "*tmd_*/freemd/rmsd_ligand_relative_over_frames_last_100frames.dat" | \
     while read FILE
     do
-        RUNID=$(../scripts/run_id_from_path.py $FILE &)
+        RUNID=$(../scripts/run_id_from_path.py $FILE)
         MEAN=$(cat $FILE | tail -n+2 | awk '{print $2}' | mean_stddev --mean &)
         STDDEV=$(cat $FILE | tail -n+2 | awk '{print $2}' | mean_stddev --stddev &)
         wait
@@ -49,8 +52,9 @@ mov_freemd_last200ps_ligrecrelmov() {
     done
     log "${PROJECT} done."
     }
-mov_freemd_last200ps_ligrecrelmov &
+mov_freemd_last100frames_ligrecrelmov
 
+exit
 
 mov_freemd_entire_ligrecrelmov() {
     PROJECT="mov_freemd_entire_ligrecrelmov"
