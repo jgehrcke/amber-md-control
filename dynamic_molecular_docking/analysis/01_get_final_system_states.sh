@@ -15,6 +15,9 @@
 #   limitations under the License.
 #
 
+# Exit upon first error.
+set -e
+
 err() {
     # Print error message to stderr.
     echo "ERROR >>> $@" 1>&2
