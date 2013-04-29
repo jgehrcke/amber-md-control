@@ -26,13 +26,15 @@ log() {
     }
 
 PREFIX="../06_md"
-CRYSTAL_RECEPTOR_PDB="../il10_dimer_cyxified.pdb"
+CRYSTAL_RECEPTOR_PDB="receptor.pdb"
 
+# Collect and rename final tMD states.
 TMD_STATES_DIR="tmd_final_states"
 rm -rf $TMD_STATES_DIR
 mkdir $TMD_STATES_DIR
 find $PREFIX -name "tmd_final_system_state.pdb" | utils/collect_pdb_files_with_run_id.py $TMD_STATES_DIR tmd_finalstate.pdb
 
+# Collect and rename final free MD states.
 FREEMD_STATES_DIR="freemd_final_states_aftermin"
 rm -rf $FREEMD_STATES_DIR
 mkdir $FREEMD_STATES_DIR
