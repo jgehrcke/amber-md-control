@@ -52,15 +52,23 @@ rest of the file name via '-'.
 #OUTFILESUFFIX = "finalstate.pdb"
 
 def main():
-    if len(sys.argv) < 3:
-        sys.exit((
-            "1st arg: must be output directory\n"
-            "2nd arg: outfile suffix"))
-    outdir = sys.argv[1]
-    outfilesuffix = sys.argv[2]
+    usage = """Usage:
+Either:  %s output directory outfile_suffix
+or    :  %s --print-run-ids
+""" % (sys.argv[0], sys.argv[0])
+    print_ids_only = False
+    if len(sys.argv) == 2:
+        if not sys.argv[1] == "--print-run-ids":
+            sys.exit(usage)
+        print_ids_only = True
+    elif len(sys.argv) < 3:
+        sys.exit(usage)
 
-    if not os.path.isdir(outdir):
-        sys.exit("Not a directory: %s" % outdir)
+    if not print_ids_only:
+        outdir = sys.argv[1]
+        outfilesuffix = sys.argv[2]
+        if not os.path.isdir(outdir):
+            sys.exit("Not a directory: '%s'" % outdir)
 
     for filepath in sys.stdin:
         filepath = filepath.strip()
@@ -71,6 +79,9 @@ def main():
         run_id = run_id_from_path(filepath)
         if run_id is None:
             errlog("No integer token in %s" % path)
+            continue
+        if print_ids_only:
+            print run_id
             continue
 
         outfileprefix = run_id
