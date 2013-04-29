@@ -43,9 +43,10 @@ mov_freemd_last100frames_ligrecrelmov() {
     find ${PREFIX} -wholename "*tmd_*/freemd/rmsd_ligand_relative_over_frames_last_100frames.dat" | \
     while read FILE
     do
-        RUNID=$(../scripts/run_id_from_path.py $FILE)
-        MEAN=$(cat $FILE | tail -n+2 | awk '{print $2}' | mean_stddev --mean &)
-        STDDEV=$(cat $FILE | tail -n+2 | awk '{print $2}' | mean_stddev --stddev &)
+        log "Processing file '$FILE' ..."
+        RUNID=$(echo "$FILE" | utils/collect_pdb_files_with_run_id.py --print-run-ids)
+        MEAN=$(cat $FILE | tail -n+2 | awk '{print $2}' | mean_stddev --mean)
+        STDDEV=$(cat $FILE | tail -n+2 | awk '{print $2}' | mean_stddev --stddev)
         wait
         # Append to file.
         echo "${RUNID},${MEAN},${STDDEV}" >> $OUTFILE
@@ -54,18 +55,17 @@ mov_freemd_last100frames_ligrecrelmov() {
     }
 mov_freemd_last100frames_ligrecrelmov
 
-exit
-
 mov_freemd_entire_ligrecrelmov() {
     PROJECT="mov_freemd_entire_ligrecrelmov"
     OUTFILE="${PROJECT}.dat"
     log "Processing ${PROJECT} ..."
     # Overwrite file
     echo "run_id,${PROJECT}_mean,${PROJECT}_stddev" > $OUTFILE
-    find ${PREFIX} -wholename "*SMD_PROD_*/free_md/rmsd_ligand_relative_over_frames_entiretraj.dat" | \
+    find ${PREFIX} -wholename "*tmd_*/freemd/rmsd_ligand_relative_over_frames_entiretraj.dat" | \
     while read FILE
     do
-        RUNID=$(../scripts/run_id_from_path.py $FILE)
+        log "Processing file '$FILE' ..."
+        RUNID=$(echo "$FILE" | utils/collect_pdb_files_with_run_id.py --print-run-ids)
         MEAN=$(cat $FILE | tail -n+2 | awk '{print $2}' | mean_stddev --mean)
         STDDEV=$(cat $FILE | tail -n+2 | awk '{print $2}' | mean_stddev --stddev)
         # Append to file.
@@ -73,19 +73,20 @@ mov_freemd_entire_ligrecrelmov() {
     done
     log "${PROJECT} done."
     }
-mov_freemd_entire_ligrecrelmov &
+mov_freemd_entire_ligrecrelmov
 
 
-mov_freemd_last200ps_liginternal() {
-    PROJECT="mov_freemd_last200ps_liginternal"
+mov_freemd_last100frames_liginternal() {
+    PROJECT="mov_freemd_last100frames_liginternal"
     OUTFILE="${PROJECT}.dat"
     log "Processing ${PROJECT} ..."
     # Overwrite file
     echo "run_id,${PROJECT}_mean,${PROJECT}_stddev" > $OUTFILE
-    find ${PREFIX} -wholename "*SMD_PROD_*/free_md/rmsd_ligand_internal_over_frames_last200ps.dat" | \
+    find ${PREFIX} -wholename "*tmd_*/freemd/rmsd_ligand_internal_over_frames_last_100frames.dat" | \
     while read FILE
     do
-        RUNID=$(../scripts/run_id_from_path.py $FILE)
+        log "Processing file '$FILE' ..."
+        RUNID=$(echo "$FILE" | utils/collect_pdb_files_with_run_id.py --print-run-ids)
         MEAN=$(cat $FILE | tail -n+2 | awk '{print $2}' | mean_stddev --mean)
         STDDEV=$(cat $FILE | tail -n+2 | awk '{print $2}' | mean_stddev --stddev)
         # Append to file.
@@ -93,7 +94,7 @@ mov_freemd_last200ps_liginternal() {
     done
     log "${PROJECT} done."
     }
-mov_freemd_last200ps_liginternal &
+mov_freemd_last100frames_liginternal
 
 
 mov_freemd_entire_liginternal() {
@@ -102,10 +103,11 @@ mov_freemd_entire_liginternal() {
     log "Processing ${PROJECT} ..."
     # Overwrite file
     echo "run_id,${PROJECT}_mean,${PROJECT}_stddev" > $OUTFILE
-    find ${PREFIX} -wholename "*SMD_PROD_*/free_md/rmsd_ligand_internal_over_frames_entiretraj.dat" | \
+    find ${PREFIX} -wholename "*tmd_*/freemd/rmsd_ligand_internal_over_frames_entiretraj.dat" | \
     while read FILE
     do
-        RUNID=$(../scripts/run_id_from_path.py $FILE)
+        log "Processing file '$FILE' ..."
+        RUNID=$(echo "$FILE" | utils/collect_pdb_files_with_run_id.py --print-run-ids)
         MEAN=$(cat $FILE | tail -n+2 | awk '{print $2}' | mean_stddev --mean)
         STDDEV=$(cat $FILE | tail -n+2 | awk '{print $2}' | mean_stddev --stddev)
         # Append to file.
@@ -113,8 +115,9 @@ mov_freemd_entire_liginternal() {
     done
     log "${PROJECT} done."
     }
-mov_freemd_entire_liginternal &
+mov_freemd_entire_liginternal
 
+exit
 
 mov_smd_entire_ligrecrelmov() {
     PROJECT="mov_smd_entire_ligrecrelmov"
