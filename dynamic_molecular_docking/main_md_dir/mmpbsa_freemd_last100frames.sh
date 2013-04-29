@@ -18,10 +18,18 @@
 # To be executed in freemd dir.
 # Requires patched AmberTools12.
 
-#AMBER_SETUP="/projects/bioinfp_apps/amber12_centos58_intel1213_openmpi16_cuda5/setup.sh"
-#source "${AMBER_SETUP}"
+# Set up environment for Amber.
+AMBER_SETUP="/projects/bioinfp_apps/amber12_centos58_intel1213_openmpi16_cuda5/setup.sh"
+MODULE_TEST_OUTPUT=$(command -v module) # valid on ZIH
+if [ $? -eq 0 ]; then
+    echo "Try loading ZIH module amber/12"
+    module load amber/12
+else
+    echo "Sourcing $AMBER_SETUP"
+    source "${AMBER_SETUP}"
+fi
 
-PROJECT="mmpbsa_last100fr_with2ps_interval"
+PROJECT="mmpbsa_last100frames"
 TRAJFILE="production_NVT.mdcrd"
 TOP_UNSOLVATED_COMPLEX="complex_unsolvated.prmtop"
 TOP_SOLVATED_COMPLEX="top.prmtop"
