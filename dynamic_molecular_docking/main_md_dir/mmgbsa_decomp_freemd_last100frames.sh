@@ -124,6 +124,8 @@ MMPBSAINPUT="
     endframe = ${ENDFRAMENUMBER},
     interval = 1,
     verbose = 2,
+    keep_files = 2,
+    use_sander = 1
 /
 &gb
 /
