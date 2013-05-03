@@ -18,18 +18,25 @@
 
 #set -e
 
+test_number() {
+    if ! [[ "${1}" =~ ^[0-9]+$ ]] ; then
+        err "Not a number: '${1}'. Exit."
+        exit 1
+    fi
+    }
+
+FINISHEDONLY=false
+STARTEDONLY=false
+CHECKMINFRAMES=false
 if [[ "$1" == "--finished-only" ]]; then
     FINISHEDONLY=true
-else
-    FINISHEDONLY=false
-    if [[ "$1" == "--started-only" ]]; then
-        STARTEDONLY=true
-    else
-        STARTEDONLY=false
-    fi
+elif [[ "$1" == "--started-only" ]]; then
+    STARTEDONLY=true
+elif [[ "$1" == "--minframes" ]]; then
+    CHECKMINFRAMES=true
+    MINFRAMES="$2"
+    test_number "${MINFRAMES}"    
 fi
-
-
 
 
 err() {
@@ -38,7 +45,7 @@ err() {
     }
 
 log() {
-    if $FINISHEDONLY || $STARTEDONLY ; then
+    if $FINISHEDONLY || $STARTEDONLY || $CHECKMINFRAMES; then
         return
     fi
     # Print message to stdout.
@@ -98,6 +105,10 @@ for LIGDIR in ligand_*; do
         if [ $? != 0 ]; then
             err "$(pwd): netcdftraj_framecount returned with error."
             cd ../../ ; exit
+        fi
+        if [ "$FRAMECOUNTACTUAL" -ge "$MINFRAMES" ] ; then
+            echo $PWD
+            cd ../../ ; continue
         fi
         log "${FRAMECOUNTACTUAL} frames."
         cd ../../ ;
