@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Set up environment (Amber, Python, ...).
-if [ -f "../../../env_setup.sh" ]; then
-    source "../../../env_setup.sh"
+if [ -f "./env_setup.sh" ]; then
+    source "./env_setup.sh"
 fi
 
 STARTDIR="$PWD"

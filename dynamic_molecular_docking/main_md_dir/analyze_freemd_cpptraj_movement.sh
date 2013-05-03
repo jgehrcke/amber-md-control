@@ -17,10 +17,6 @@
 
 # To be executed in freemd dir.
 
-
-#AMBER_SETUP="/projects/bioinfp_apps/amber12_centos58_intel1213_openmpi16_cuda5/setup.sh"
-#source "${AMBER_SETUP}"
-
 PRMTOP="top.prmtop"
 TRAJFILE="production_NVT.mdcrd"
 RMSOUT_RELATIVE_ENTIRE="rmsd_ligand_relative_over_frames_entiretraj.dat"

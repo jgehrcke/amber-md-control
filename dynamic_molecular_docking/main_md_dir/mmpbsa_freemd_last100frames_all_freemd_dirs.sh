@@ -5,6 +5,11 @@ SCRIPT_TO_EXECUTE="./mmpbsa_freemd_last100frames.sh"
 ABSPATH_TO_SCRIPT=$(readlink -f ${SCRIPT_TO_EXECUTE})
 NBR_CPUS=$1
 
+# Set up environment (Amber, Python, ...).
+if [ -f "./env_setup.sh" ]; then
+    source "./env_setup.sh"
+fi
+
 if [ -z "$NBR_CPUS" ]; then
     echo "First argument: number of CPUs (required)."
     exit 1

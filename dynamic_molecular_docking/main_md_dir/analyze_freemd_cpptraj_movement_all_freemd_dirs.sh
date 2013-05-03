@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Set up environment (Amber, Python, ...).
+if [ -f "./env_setup.sh" ]; then
+    source "./env_setup.sh"
+fi
+
 STARTDIR="$PWD"
 SCRIPT_TO_EXECUTE="./analyze_freemd_traj_cpptraj.sh"
 ABSPATH_TO_SCRIPT=$(readlink -f ${SCRIPT_TO_EXECUTE})
