@@ -22,7 +22,15 @@ if [[ "$1" == "--finished-only" ]]; then
     FINISHEDONLY=true
 else
     FINISHEDONLY=false
+    if [[ "$1" == "--started-only" ]]; then
+        STARTEDONLY=true
+    else
+        STARTEDONLY=false
+    fi
 fi
+
+
+
 
 err() {
     # Print error message to stderr.
@@ -30,7 +38,7 @@ err() {
     }
 
 log() {
-    if $FINISHEDONLY ; then
+    if $FINISHEDONLY || $STARTEDONLY ; then
         return
     fi
     # Print message to stdout.
@@ -63,6 +71,10 @@ for LIGDIR in ligand_*; do
         fi
         if [ ! -f "${FREEMDOUTFILE}" ]; then
             log "${PWD}: no ${FREEMDOUTFILE}."
+            cd ../../ ; continue
+        fi
+        if $STARTEDONLY ; then
+            echo $PWD
             cd ../../ ; continue
         fi
         OUTFILE_FINISH=$(tail ${FREEMDOUTFILE} -n 1 | grep "wall time")
