@@ -158,6 +158,8 @@ echo "minimization 1
 Minimization according to
 http://ambermd.org/tutorials/basic/tutorial1/section5.htm
 
+Relaxing the water first, but without waiting for convergence.
+
 I) steepest descent: ncyc,
 II) conjugate gradient: maxcyc-ncyc
 ntb=1: periodic boundary conditions
@@ -165,8 +167,8 @@ ntr=1: restraints based on restraint_wt/restraintmask
 
 &cntrl
  imin = 1,
- maxcyc = 1000,
- ncyc = 400,
+ maxcyc = 500,
+ ncyc = 300,
  ntb = 1,
  ntr = 1,
  cut = 8.0
@@ -183,10 +185,13 @@ echo "Minimization 2
 Minimization according to
 http://ambermd.org/tutorials/basic/tutorial1/section5.htm
 
+# Long minimization applied to the entire system. Goal is 
+# to yield relaxed coordinates for post-processing.
+
 &cntrl
  imin = 1,
- maxcyc = 1000,
- ncyc = 400,
+ maxcyc = 3000,
+ ncyc = 1000,
  ntb = 1,
  ntr = 0,
  cut = 8.0,
