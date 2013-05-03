@@ -16,20 +16,11 @@
 #
 
 # To be executed in freemd dir.
-# Requires patched AmberTools12.
+# Requires patched AmberTools12 or AmberTools13.
 
-# Set up environment for Amber.
-AMBER_SETUP="/projects/bioinfp_apps/amber12_centos58_intel1213_openmpi16_cuda5/setup.sh"
-PYTHON_SETUP="/projects/bioinfp_apps/Python-2.7.3/setup.sh"
-MODULE_TEST_OUTPUT=$(command -v module) # valid on ZIH
-if [ $? -eq 0 ]; then
-    echo "Try loading ZIH module amber/12"
-    module load amber/12
-else
-    echo "Sourcing $AMBER_SETUP"
-    source "${AMBER_SETUP}"
-    echo "Sourcing $PYTHON_SETUP"
-    source "${PYTHON_SETUP}"
+# Set up environment (Amber, Python, ...).
+if [ -f "../../../env_setup.sh" ]; then
+    source "../../../env_setup.sh"
 fi
 
 PROJECT="mmpbsa_last100frames"
