@@ -61,13 +61,23 @@ print_run_command () {
 SCRIPTNAME="$(basename "$0")"
 SCRIPTNAME_WOEXT="${SCRIPTNAME%.*}"
 
-
-#if [ -f "$HBOND_REG_LIG_AVG.DAT" ] && [ -f "$RMSOUT_INTERNAL_ENTIRE" ] && \
-#   [ -f "$RMSOUT_RELATIVE_LAST" ] && [ -f "$RMSOUT_INTERNAL_LAST" ]; then
-#    err "All output files already exist. Exit without error."
-#    exit 0
-#fi
-
+ONE_MISSING=false
+for FILENAME in \
+    $ENTIRE_HBOND_REG_LIG_AVG_DAT_FILE \
+    $ENTIRE_HBOND_LIG_REG_AVG_DAT_FILE \
+    $ENTIRE_HBOND_OUT_FILE \
+    $LAST_N_HBOND_REG_LIG_AVG_DAT_FILE \
+    $LAST_N_HBOND_LIG_REG_AVG_DAT_FILE \
+    $LAST_N_HBOND_OUT_FILE
+do
+    if [ ! -f $FILENAME ]; then
+        ONE_MISSING=true
+    fi
+done
+if ! $ONE_MISSING ; then
+    err "All output files already exist. Exit without error."
+    exit 0
+fi
 
 CPPTRAJ=$(command -v cpptraj)
 if [ -z ${CPPTRAJ} ]; then
