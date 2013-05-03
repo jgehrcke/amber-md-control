@@ -1,7 +1,7 @@
 #!/bin/bash
 
 STARTDIR="$PWD"
-SCRIPT_TO_EXECUTE="./mmpbsa_freemd_last100frames.sh"
+SCRIPT_TO_EXECUTE="./mmgbsa_decomp_freemd_last100frames.sh"
 ABSPATH_TO_SCRIPT=$(readlink -f ${SCRIPT_TO_EXECUTE})
 NBR_CPUS=$1
 

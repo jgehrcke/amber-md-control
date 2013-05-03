@@ -4,6 +4,10 @@ STARTDIR="$PWD"
 SCRIPT_TO_EXECUTE="./minimize_freemd_finalsystemstate.sh"
 ABSPATH_TO_SCRIPT=$(readlink -f ${SCRIPT_TO_EXECUTE})
 
+# Set up environment (Amber, Python, ...).
+if [ -f "./env_setup.sh" ]; then
+    source "./env_setup.sh"
+fi
 
 echo "execute script in each free MD dir: ${ABSPATH_TO_SCRIPT}"
 

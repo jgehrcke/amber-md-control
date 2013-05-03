@@ -13,22 +13,61 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-# Exit script upon first error.
-set -e
 
+# Set up environment for Amber.
 AMBER_SETUP="/projects/bioinfp_apps/amber12_centos58_intel1213_openmpi16_cuda5/setup.sh"
+MODULE_TEST_OUTPUT=$(command -v module) # valid on ZIH
+if [ $? -eq 0 ]; then
+    echo "Try loading ZIH module amber/12"
+    module load amber/12
+else
+    echo "Sourcing $AMBER_SETUP"
+    source "${AMBER_SETUP}"
+fi
+
 EQUI_RESTART_FILE="equilibrate_NPT.rst"
 TMD_RESTRAINT_FILE="dmd_tmd.rest"
 TOPOLOGYFILE="top.prmtop"
 PRODPREFIX="dmd_tmd_NVT"
 PRODINFILE="${PRODPREFIX}.in"
-TMD_TIME_NS="4"
+# Define MD duration in ns. Boundary condition: MD time step of 2 fs.
+TMD_TIME_NS="3"
 TMD_TIME_STEPS=$(python -c "print int(${TMD_TIME_NS}*1000000*0.5)")
 
 err() {
     # Print error message to stderr.
     echo "$@" 1>&2;
     }
+
+print_run_command () {
+    echo "Running command:"
+    echo "${1}"
+    eval "${1}"
+    }
+    
+# Test validity of arguments.
+test_number() {
+    if ! [[ "${1}" =~ ^[0-9]+$ ]] ; then
+        err "Not a number: '${1}'. Exit."
+        exit 1
+    fi
+    }    
+
+# Check if all required files are available.
+check_required () {
+    if [ ! -f $1 ]; then
+       err "File $1 is required and does not exist. exit."
+       exit 1
+    fi
+    }
+
+# Check if path is directly in current dir, i.e. does not contain slash
+check_in_this_dir () {
+    if [[ "${1}" == */* ]]; then
+        err "${1} must not contain slashes."
+        exit 1
+    fi
+}
 
 # Check number of arguments, define help message.
 SCRIPTNAME="$(basename "$0")"
@@ -43,14 +82,6 @@ fi
 OUTDIR="$1"
 GPUCPU="$2"
 NUMBER="$3"
-
-# Test validity of arguments.
-test_number() {
-    if ! [[ "${1}" =~ ^[0-9]+$ ]] ; then
-        err "Not a number: ${1}. Exit."
-        exit 1
-    fi
-    }
 
 if [ -z "$NUMBER" ]; then
     GPUID="none"
@@ -75,7 +106,6 @@ if [[ "${GPUCPU}" == "gpu" ]]; then
     fi
 elif [[ "${GPUCPU}" == "cpu" ]]; then
     echo "Setting up tMD on ${NUMBER} CPU cores."
-
     if [[ "${CPUNUMBER}" == "none" ]]; then
         err "When using option 'cpu', the number of CPUs must be provided."
         exit 1
@@ -93,22 +123,6 @@ echo "Current working directory: $(pwd)"
 if [ ${PBS_JOBID+x} ]; then
     echo "PBS_JOBID is set ('${PBS_JOBID}')"
 fi
-
-# Check if all required files are available.
-check_required () {
-    if [ ! -f $1 ]; then
-       err "File $1 is required and does not exist. exit."
-       exit 1
-    fi
-    }
-
-# Check if path is directly in current dir, i.e. does not contain slash
-check_in_this_dir () {
-    if [[ "${1}" == */* ]]; then
-        err "${1} must not contain slashes."
-        exit 1
-    fi
-}
 
 check_required ${TMD_RESTRAINT_FILE}
 check_required ${EQUI_RESTART_FILE}
@@ -131,26 +145,39 @@ if [ $? != 0 ]; then
     exit 1
 fi
 
-echo "Try loading ZIH module amber/12"
-module load amber/12 # valid on ZIH
-if [ $? -ne 0 ]; then
-    echo "Sourcing $AMBER_SETUP"
-    source "${AMBER_SETUP}"
-fi
-
 echo "Linking required files to current working directory: $PWD"
 
-# ${TOPOLOGYFILE} etc are guaranteed to be one dir level higher.
-ln -s ../${TOPOLOGYFILE} ${TOPOLOGYFILE}
-ln -s ../${TMD_RESTRAINT_FILE} ${TMD_RESTRAINT_FILE}
-ln -s ../${EQUI_RESTART_FILE} ${EQUI_RESTART_FILE}
+# ${TOPOLOGYFILE} etc are guaranteed to be one directory level higher.
+ln -s ../${TOPOLOGYFILE} .
+ln -s ../${TMD_RESTRAINT_FILE} .
+ln -s ../${EQUI_RESTART_FILE} .
+
+# NMR restraint handling.
+echo " >> $TMD_RESTRAINT_FILE found."
+echo " >> Replacing %TMD_TIME_STEPS%."
+CMD="sed -i 's/%TMD_TIME_STEPS%/${TMD_TIME_STEPS}/g' "${TMD_RESTRAINT_FILE}""
+print_run_command "${CMD}"
+echo " >> Restraint file content:"
+cat "$TMD_RESTRAINT_FILE"
+echo " >> Use it in MD input files, set nmropt=1."
+NMRREST="
+&wt type='END'   /
+DISANG=${TMD_RESTRAINT_FILE}
+LISTIN=POUT
+LISTOUT=POUT
+"
+NMROPT="1"
+
+
 
 echo "tMD duration: ${TMD_TIME_NS} ns, number of time steps: ${TMD_TIME_STEPS}"
 echo "Writing input file ${PRODINFILE}."
 echo "
 NVT production for N ns at 300 K.
-This is a restart simulation (irest=1). Coords, velocities and box
-information are read from inpcrd file (ntx=5).
+
+Don't read velocities from equilibration restart file (irest=0, ntx=1).
+Initial velocities are assigned randomly, so that each of these simulations
+produces a different trajectory.
 
 ntb=1: constant volume periodic boundary conditions
 ntc/ntf=2: SHAKE on hydrogens
@@ -171,14 +198,11 @@ simulations.
 t ns simulation time at 2 fs = 0.002 ps time step requires N steps:
 N = t * 10**-9 s / (0.002 * 10**-12 s) = 500000 * t
 
-e.g. 16500000 steps -> 33 ns
-e.g. 19000000 steps -> 38 ns
-e.g.  5000000 steps -> 10 ns
-
-ig: random seed
-ioutfm=1: write binary (NetCDF) trajectory
-
 ${TMD_TIME_NS} ns (${TMD_TIME_STEPS} steps) of tMD
+ig: unse random random seed
+ioutfm=1: write binary (NetCDF) trajectory
+ntxo = 2: write NetCDF restart files
+
 
 &cntrl
  ntx = 1,
@@ -197,37 +221,23 @@ ${TMD_TIME_NS} ns (${TMD_TIME_STEPS} steps) of tMD
  ntwx = 2000,
  ntwr = 100000,
  ioutfm = 1,
+ ntxo = 2,
  ig = -1,
- jar = 1,
-/
-&wt type='DUMPFREQ', istep1=100, /
-&wt type='END', /
-DISANG=${TMD_RESTRAINT_FILE}
-DUMPAVE=smd.out
-LISTIN=POUT
-LISTOUT=POUT
-/
+ nmropt = ${NMROPT},
+/${NMRREST}
 " > ${PRODINFILE}
 
 echo
 echo "Content of ${PRODINFILE}:"
 cat ${PRODINFILE}
 
-print_run_command () {
-    echo "running command:"
-    echo "${1}"
-    ${1}
-    }
-
 echo "Starting tMD production..."
-#echo "sourcing  /apps11/bioinfp/amber11_centos5_intel1213_openmpi15/setup.sh"
-#source  /apps11/bioinfp/amber11_centos5_intel1213_openmpi15/setup.sh
-#module load amber/11
-CMD="time ${ENGINE} -O -i ${PRODINFILE} -o ${PRODPREFIX}.out -p ${TOPOLOGYFILE} -c ${EQUI_RESTART_FILE} -r ${PRODPREFIX}.rst -x ${PRODPREFIX}.mdcrd"
+CMD="time ${ENGINE} -O -i ${PRODINFILE} -o ${PRODPREFIX}.out -p ${TOPOLOGYFILE} \
+    -c ${EQUI_RESTART_FILE} -r ${PRODPREFIX}.rst -x ${PRODPREFIX}.mdcrd"
 print_run_command "${CMD}"
 
 if [ $? != 0 ]; then
-    echo "Error during tMD production. exit."
+    echo "Error during tMD production. Exit."
     exit 1
 fi
 echo "tMD finished."

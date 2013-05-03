@@ -9,6 +9,7 @@ CORE_ATOM_ID=$(cat core_atom_id)
 LIGAND_CENTER_ATOM_ID=$(cat ligand_center_atom_id)
 CORE_CENTER_TARGET_DISTANCE=$(cat core_center_target_distance)
 DMDPRODRESTFILENAME="dmd_tmd.rest"
+COMMONRESTFILENAME="dmd_tmd_common.rest"
 DISTANCE_DATA_FILENAME="ligandcenter_protcore_distance.dat"
 EQUITRAJ_FILENAME="equilibrate_NPT.mdcrd"
 CPPTRAJ_INPUT_FILENAME="get_ligandcenter_protcore_distance.ptrajin"
@@ -53,14 +54,26 @@ echo
 
 INITIAL_DISTANCE=$(cat ${DISTANCE_VALUE_FILENAME})
 DMDPRODRESTFILE_CONTENT="
+# tMD time-dependent distance restraint (SMD / jar=1 implementation)
 &rst
     iat=${CORE_ATOM_ID}, ${LIGAND_CENTER_ATOM_ID},
-    r2=${INITIAL_DISTANCE},
-    r2a=${CORE_CENTER_TARGET_DISTANCE},
+    ifvari=1,
+    nstep1=0,
+    nstep2=%TMD_TIME_STEPS%,
+    r1=$(python -c "print ${INITIAL_DISTANCE}-5"), r2=${INITIAL_DISTANCE}, r3=${INITIAL_DISTANCE}, r4=$(python -c "print ${INITIAL_DISTANCE}+5"),
+    r1a=$(python -c "print ${CORE_CENTER_TARGET_DISTANCE}-5"), r2a=${CORE_CENTER_TARGET_DISTANCE}, r3a=${CORE_CENTER_TARGET_DISTANCE}, r4a=$(python -c "print ${CORE_CENTER_TARGET_DISTANCE}+5"),
     rk2=100,
+    rk2a=100,
+    rk3=100,
+    rk3a=100,
 &end
 "
 echo "${DMDPRODRESTFILE_CONTENT}" > ${DMDPRODRESTFILENAME}
-echo "wrote ${DMDPRODRESTFILENAME}: "
-echo "$(cat ${DMDPRODRESTFILENAME})"
+
+if [ -f "$COMMONRESTFILENAME" ]; then
+    echo " >> Incorporating $COMMONRESTFILENAME"
+    cat "$COMMONRESTFILENAME" >> "$DMDPRODRESTFILENAME"
+fi
+echo " >> Wrote ${DMDPRODRESTFILENAME}: "
+cat "${DMDPRODRESTFILENAME}"
 echo

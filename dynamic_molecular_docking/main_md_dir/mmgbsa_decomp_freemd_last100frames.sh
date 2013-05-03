@@ -16,14 +16,14 @@
 #
 
 # To be executed in freemd dir.
-# Requires patched AmberTools12 or AmberTools13.
+# Requires patched AmberTools12.
 
 # Set up environment (Amber, Python, ...).
 if [ -f "../../../env_setup.sh" ]; then
     source "../../../env_setup.sh"
 fi
 
-PROJECT="mmpbsa_last100frames"
+PROJECT="mmgbsa_decomp_last100frames"
 TRAJFILE="production_NVT.mdcrd"
 TOP_UNSOLVATED_COMPLEX="complex_unsolvated.prmtop"
 TOP_SOLVATED_COMPLEX="top.prmtop"
@@ -118,10 +118,10 @@ MMPBSAINPUT="
     keep_files = 2,
     use_sander = 1
 /
-&pb
-    # http://archive.ambermd.org/201211/0319.html
-    radiopt=0,
-    inp=1,
+&gb
+/
+&decomp
+    idecomp = 2,
 /
 "
 

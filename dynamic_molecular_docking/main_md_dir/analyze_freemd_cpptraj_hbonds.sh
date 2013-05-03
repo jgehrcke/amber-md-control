@@ -17,16 +17,19 @@
 
 # To be executed in freemd dir.
 
-
-#AMBER_SETUP="/projects/bioinfp_apps/amber12_centos58_intel1213_openmpi16_cuda5/setup.sh"
-#source "${AMBER_SETUP}"
-
 PRMTOP="top.prmtop"
 TRAJFILE="production_NVT.mdcrd"
-RMSOUT_RELATIVE_ENTIRE="rmsd_ligand_relative_over_frames_entiretraj.dat"
-RMSOUT_INTERNAL_ENTIRE="rmsd_ligand_internal_over_frames_entiretraj.dat"
-RMSOUT_RELATIVE_LAST="rmsd_ligand_relative_over_frames_last_100frames.dat"
-RMSOUT_INTERNAL_LAST="rmsd_ligand_internal_over_frames_last_100frames.dat"
+ENTIRE_HBOND_REG_LIG_AVG_DAT_FILE="hbonds_rec_lig_average_entire.dat"
+ENTIRE_HBOND_LIG_REG_AVG_DAT_FILE="hbonds_lig_reg_average_entire.dat"
+ENTIRE_HBOND_OUT_FILE="hbonds_out_entire.dat"
+
+LAST_N=250 # 1 ns in case of 2500 frames for 10 ns.
+
+LAST_N_HBOND_REG_LIG_AVG_DAT_FILE="hbonds_rec_lig_average_last_${LAST_N}.dat"
+LAST_N_HBOND_LIG_REG_AVG_DAT_FILE="hbonds_lig_reg_average_last_${LAST_N}.dat"
+LAST_N_HBOND_OUT_FILE="hbonds_out_last_${LAST_N}.dat"
+
+
 
 err() {
     # Print error message to stderr.
@@ -58,13 +61,23 @@ print_run_command () {
 SCRIPTNAME="$(basename "$0")"
 SCRIPTNAME_WOEXT="${SCRIPTNAME%.*}"
 
-
-if [ -f "$RMSOUT_RELATIVE_ENTIRE" ] && [ -f "$RMSOUT_INTERNAL_ENTIRE" ] && \
-   [ -f "$RMSOUT_RELATIVE_LAST" ] && [ -f "$RMSOUT_INTERNAL_LAST" ]; then
+ONE_MISSING=false
+for FILENAME in \
+    $ENTIRE_HBOND_REG_LIG_AVG_DAT_FILE \
+    $ENTIRE_HBOND_LIG_REG_AVG_DAT_FILE \
+    $ENTIRE_HBOND_OUT_FILE \
+    $LAST_N_HBOND_REG_LIG_AVG_DAT_FILE \
+    $LAST_N_HBOND_LIG_REG_AVG_DAT_FILE \
+    $LAST_N_HBOND_OUT_FILE
+do
+    if [ ! -f $FILENAME ]; then
+        ONE_MISSING=true
+    fi
+done
+if ! $ONE_MISSING ; then
     err "All output files already exist. Exit without error."
     exit 0
 fi
-
 
 CPPTRAJ=$(command -v cpptraj)
 if [ -z ${CPPTRAJ} ]; then
@@ -91,15 +104,12 @@ if [ $? != 0 ]; then
     exit 1
 fi
 
-# MEASURE LIGAND MOVEMENT FOR ENTIRE TRAJECTORY.
+# ANALYZE HBONDS FOR ENTIRE TRAJECTORY.
+INTERVAL=1
 CPPTRAJINPUT="
-trajin ${TRAJFILE}
-# Align receptors in all frames to receptor in first frame.
-rmsd :${RECEPTOR_RESIDUES}@CA,N first
-# Measure distance ligand to ligand for each frame without aligning anything.
-rmsd :${LIGAND_RESIDUES} first nofit out ${RMSOUT_RELATIVE_ENTIRE}
-# Measure distance ligand to ligand for each frame, first align ligand to ligand.
-rmsd :${LIGAND_RESIDUES} first out ${RMSOUT_INTERNAL_ENTIRE}
+trajin ${TRAJFILE} 1 last $INTERVAL
+hbond REC-LIG donormask :${RECEPTOR_RESIDUES} acceptormask :${LIGAND_RESIDUES}@F*,O*,N* out ${ENTIRE_HBOND_OUT_FILE} avgout ${ENTIRE_HBOND_REG_LIG_AVG_DAT_FILE}
+hbond LIG-REC donormask :${LIGAND_RESIDUES} acceptormask :${RECEPTOR_RESIDUES}@F*,O*,N* out ${ENTIRE_HBOND_OUT_FILE} avgout ${ENTIRE_HBOND_LIG_REG_AVG_DAT_FILE}
 "
 # Write input file.
 INFILE="${SCRIPTNAME_WOEXT}_entiretraj_cpptraj.in"
@@ -112,25 +122,22 @@ echo
 # Run cpptraj.
 CMD="time cpptraj -p ${PRMTOP} -i ${INFILE}"
 print_run_command "${CMD}" 2>&1 | tee ${INFILE_WOEXT}.log
-check_required ${RMSOUT_RELATIVE_ENTIRE}
-check_required ${RMSOUT_INTERNAL_ENTIRE}
 
+check_required $ENTIRE_HBOND_REG_LIG_AVG_DAT_FILE
+check_required $ENTIRE_HBOND_LIG_REG_AVG_DAT_FILE
+check_required $ENTIRE_HBOND_OUT_FILE
 
 # MEASURE LIGAND MOVEMENT FOR LAST 100 FRAMES.
-STARTFRAMENUMBER=$((TRAJFRAMECOUNT-100+1))
+STARTFRAMENUMBER=$((TRAJFRAMECOUNT-${LAST_N}+1))
 CPPTRAJINPUT="
 # If only the first frame is given, then cpptraj from there on processes
 # all until the last frame.
 trajin ${TRAJFILE} ${STARTFRAMENUMBER}
-# Align receptors in all frames to receptor in first frame.
-rmsd :${RECEPTOR_RESIDUES}@CA,N first
-# Measure distance ligand to ligand for each frame without aligning anything.
-rmsd :${LIGAND_RESIDUES} first nofit out ${RMSOUT_RELATIVE_LAST}
-# Measure distance ligand to ligand for each frame, first align ligand to ligand.
-rmsd :${LIGAND_RESIDUES} first out ${RMSOUT_INTERNAL_LAST}
+hbond REC-LIG donormask :${RECEPTOR_RESIDUES} acceptormask :${LIGAND_RESIDUES}@F*,O*,N* out ${LAST_N_HBOND_OUT_FILE} avgout ${LAST_N_HBOND_REG_LIG_AVG_DAT_FILE}
+hbond LIG-REC donormask :${LIGAND_RESIDUES} acceptormask :${RECEPTOR_RESIDUES}@F*,O*,N* out ${LAST_N_HBOND_OUT_FILE} avgout ${LAST_N_HBOND_LIG_REG_AVG_DAT_FILE}
 "
 # Write input file.
-INFILE="${SCRIPTNAME_WOEXT}_last100frames_cpptraj.in"
+INFILE="${SCRIPTNAME_WOEXT}_last_n_frames_cpptraj.in"
 INFILE_WOEXT="${INFILE%.*}"
 log "Writing input file: ${INFILE}."
 echo "${CPPTRAJINPUT}" > ${INFILE}
@@ -140,6 +147,9 @@ echo
 # Run cpptraj.
 CMD="time cpptraj -p ${PRMTOP} -i ${INFILE}"
 print_run_command "${CMD}" 2>&1 | tee ${INFILE_WOEXT}.log
-check_required ${RMSOUT_RELATIVE_LAST}
-check_required ${RMSOUT_INTERNAL_LAST}
+
+
+check_required $LAST_N_HBOND_REG_LIG_AVG_DAT_FILE
+check_required $LAST_N_HBOND_LIG_REG_AVG_DAT_FILE
+check_required $LAST_N_HBOND_OUT_FILE
 

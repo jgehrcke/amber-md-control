@@ -33,10 +33,18 @@ if [ $# -lt 1 ]; then
 fi
 
 
-for LIGDIR in heptetra_rndrot_*; do
-    cd $LIGDIR;
-    for SMDDIR in SMD_PROD_*; do
-        cd $SMDDIR;
+for LIGDIR in ligand_*; do
+    if [ -d "$LIGDIR" ]; then
+        cd "$LIGDIR"
+    else
+        continue
+    fi
+    for TMDDIR in tmd_*; do
+        if [ -d "$TMDDIR" ];then
+            cd "$TMDDIR"
+        else
+            continue
+        fi
         log "pwd: $(pwd)"
         for FILEDIR in "$@"; do
             if [[ -e "$FILEDIR" || -L "$FILEDIR" ]]; then

@@ -15,17 +15,10 @@
 
 # To be executed in free MD directory.
 
-# Set up environment for Amber.
-AMBER_SETUP="/projects/bioinfp_apps/amber12_centos58_intel1213_openmpi16_cuda5/setup.sh"
-MODULE_TEST_OUTPUT=$(command -v module) # valid on ZIH
-if [ $? -eq 0 ]; then
-    echo "Try loading ZIH module amber/12"
-    module load amber/12
-else
-    echo "Sourcing $AMBER_SETUP"
-    source "${AMBER_SETUP}"
+# Set up environment (Amber, Python, ...).
+if [ -f "../../../env_setup.sh" ]; then
+    source "../../../env_setup.sh"
 fi
-
 
 err() {
     # Print error message to stderr.
@@ -134,6 +127,22 @@ if [ -f "${MIN2PREFIX}.rst" ];then
     exit 0
 fi
 
+RESTRAINTS_FILE="dmd_freemd.rest"
+if [ -f ${RESTRAINTS_FILE} ]; then
+    echo "$RESTRAINTS_FILE found. Use it in MD input files, set nmropt=1."
+    NMRREST="
+&wt type='END'   /
+DISANG=${RESTRAINTS_FILE}
+LISTIN=POUT
+LISTOUT=POUT
+"
+    NMROPT="1"
+else
+    NMRREST=""
+    NMROPT="0"
+fi
+
+
 # MINIMIZATION
 # ============================================================================
 echo
@@ -146,37 +155,44 @@ check_delete ${MIN1FILE}
 check_delete ${MIN2FILE}
 echo "Writing minimization input file ${MIN1FILE} ..."
 echo "minimization 1
+Minimization according to
 http://ambermd.org/tutorials/basic/tutorial1/section5.htm
-Two stage approach. First stage: solute fixed, minimize the water and ions.
-Second stage: minimize the entire system.
 
-steepest descent: ncyc, conjugate gradient: maxcyc-ncyc
+I) steepest descent: ncyc,
+II) conjugate gradient: maxcyc-ncyc
 ntb=1: periodic boundary conditions
-ntr=1: restraints
+ntr=1: restraints based on restraint_wt/restraintmask
 
 &cntrl
  imin = 1,
- maxcyc = 1500,
- ncyc = 500,
+ maxcyc = 1000,
+ ncyc = 400,
  ntb = 1,
  ntr = 1,
  cut = 8.0
  ig = -1
+ ntxo = 2,
  restraint_wt = 500.0,
  restraintmask = \"!:WAT\",
-/
+ nmropt = ${NMROPT},
+/${NMRREST}
 " > ${MIN1FILE}
 
 echo "Writing minimization input file ${MIN2FILE} ..."
 echo "Minimization 2
+Minimization according to
+http://ambermd.org/tutorials/basic/tutorial1/section5.htm
 
 &cntrl
  imin = 1,
- maxcyc = 2500,
- ncyc = 1000,
+ maxcyc = 1000,
+ ncyc = 400,
  ntb = 1,
+ ntr = 0,
  cut = 8.0,
-/
+ ntxo = 2,
+ nmropt = ${NMROPT},
+/${NMRREST}
 " > ${MIN2FILE}
 
 echo

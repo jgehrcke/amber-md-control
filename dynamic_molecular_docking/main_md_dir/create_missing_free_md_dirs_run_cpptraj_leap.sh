@@ -18,14 +18,9 @@
 FREEMDDIR="freemd"
 FREEMD_REQUIRED_FILES_DIR="freemd_required_files"
 
-# Set up environment for Amber.
-MODULE_TEST_OUTPUT=$(command -v module) # valid on ZIH
-if [ $? -eq 0 ]; then
-    echo "Try loading ZIH module amber/12"
-    module load amber/12
-else
-    echo "Sourcing $AMBER_SETUP"
-    source "${AMBER_SETUP}"
+# Set up environment (Amber, Python, ...).
+if [ -f "./env_setup.sh" ]; then
+    source "./env_setup.sh"
 fi
 
 set -e

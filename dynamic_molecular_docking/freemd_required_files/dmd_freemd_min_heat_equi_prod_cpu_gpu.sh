@@ -24,9 +24,9 @@ else
     source "${AMBER_SETUP}"
 fi
 
-# Define MD timings. Boundary condition: MD time step of 2 fs.
+# Define MD timings in ns. Boundary condition: MD time step of 2 fs.
 HEATUP_TIME_NS="0.02"
-EQUI_TIME_NS="0.5"
+EQUI_TIME_NS="0.4"
 PROD_TIME_NS="10"
 
 HEATUP_TIME_STEPS=$(python -c "print int(${HEATUP_TIME_NS}*1000000*0.5)")
@@ -57,7 +57,14 @@ check_required () {
 print_run_command () {
     echo "Running command:"
     echo "${1}"
-    ${1}
+    eval "${1}"
+    }
+
+test_number() {
+    if ! [[ "${1}" =~ ^[0-9]+$ ]] ; then
+        err "Not a number: '${1}'. Exit."
+        exit 1
+    fi
     }
 
 SCRIPTNAME="$(basename "$0")"
@@ -68,7 +75,7 @@ if [ $# -le 2 ]; then
     err "1st argument: the prmtop file of the system to minimize."
     err "2nd argument: the initial coord file of the system to minimize."
     err "3rd argument: the number of CPUs to use (for minimization in case of GPU)."
-    err "4th argument: GPU ID (optional in case of GPU) or 'cpu' (runs all steps on CPU)"
+    err "4th argument: GPU ID (optional in case of GPU) or 'cpu' (runs all steps on CPU)."
     exit 1
 fi
 
@@ -76,13 +83,6 @@ PRMTOP="$1"
 INITCRD="$2"
 NCPUS="$3"
 GPUID="$4"
-
-test_number() {
-    if ! [[ "${1}" =~ ^[0-9]+$ ]] ; then
-        err "Not a number: ${1}. Exit."
-        exit 1
-    fi
-    }
 
 # The third argument must in any case be a number.
 test_number "${NCPUS}"
@@ -141,6 +141,21 @@ echo "heatup duration: ${HEATUP_TIME_NS} ns, time steps: ${HEATUP_TIME_STEPS}"
 echo "equi duration: ${EQUI_TIME_NS} ns, time steps: ${EQUI_TIME_STEPS}"
 echo "prod duration: ${PROD_TIME_NS} ns, time steps: ${PROD_TIME_STEPS}"
 
+RESTRAINTS_FILE="dmd_freemd.rest"
+if [ -f ${RESTRAINTS_FILE} ]; then
+    echo "$RESTRAINTS_FILE found. Use it in MD input files, set nmropt=1."
+    NMRREST="
+&wt type='END'   /
+DISANG=${RESTRAINTS_FILE}
+LISTIN=POUT
+LISTOUT=POUT
+"
+    NMROPT="1"
+else
+    NMRREST=""
+    NMROPT="0"
+fi
+
 
 # MINIMIZATION
 # ============================================================================
@@ -154,47 +169,44 @@ check_delete ${MIN1FILE}
 check_delete ${MIN2FILE}
 echo "Writing minimization input file ${MIN1FILE} ..."
 echo "minimization 1
+Minimization according to
 http://ambermd.org/tutorials/basic/tutorial1/section5.htm
-Our minimization procedure will consist of a two stage approach.
-In the first stage we will keep the SOLUTE fixed and just minimize
-the positions of the water and ions. Then in the second stage we
-will minimize the entire system.
 
-steepest descent: ncyc, conjugate gradient: maxcyc-ncyc
+I) steepest descent: ncyc,
+II) conjugate gradient: maxcyc-ncyc
 ntb=1: periodic boundary conditions
-ntr=1: restraints
+ntr=1: restraints based on restraint_wt/restraintmask
 
 &cntrl
  imin = 1,
- maxcyc = 1500,
- ncyc = 500,
+ maxcyc = 1000,
+ ncyc = 400,
  ntb = 1,
  ntr = 1,
  cut = 8.0
  ig = -1
+ ntxo = 2,
  restraint_wt = 500.0,
  restraintmask = \"!:WAT\",
-/
+ nmropt = ${NMROPT},
+/${NMRREST}
 " > ${MIN1FILE}
 
 echo "Writing minimization input file ${MIN2FILE} ..."
 echo "Minimization 2
+Minimization according to
 http://ambermd.org/tutorials/basic/tutorial1/section5.htm
-Our minimization procedure will consist of a two stage approach.
-In the first stage we will keep the SOLUTE fixed and just minimize
-the positions of the water and ions. Then in the second stage we
-will minimize the entire system.
-
-Additional Heparin torsional restraints.
 
 &cntrl
  imin = 1,
- maxcyc = 2500,
- ncyc = 1000,
+ maxcyc = 1000,
+ ncyc = 400,
  ntb = 1,
  ntr = 0,
  cut = 8.0,
-/
+ ntxo = 2,
+ nmropt = ${NMROPT},
+/${NMRREST}
 " > ${MIN2FILE}
 
 echo
@@ -271,11 +283,13 @@ N=10000 -> 20 ps
  nstlim = ${HEATUP_TIME_STEPS}, dt = 0.002,
  ntpr = 500, ntwx = 500, ntwr = 10000,
  ioutfm = 1,
+ ntxo = 2,
  ig = -1,
  ntr = 1,
  restraint_wt = 10.0,
  restraintmask = \"!:WAT\",
-/
+ nmropt = ${NMROPT},
+/${NMRREST}
 " > ${HEATINFILE}
 echo
 echo "content of ${HEATINFILE}:"
@@ -318,8 +332,6 @@ N = 2 * 10**-9 s / (0.002 * 10**-12 s) = 1000000
 
 ioutfm=1: write binary (NetCDF) trajectory
 
-Additional Heparin torsional restraints
-
 ntpr: mdinfo and mdout file
 ntwx: coordinates to trajectory file
 ntwr: restart file
@@ -336,7 +348,9 @@ ntwr: restart file
  ntwx = 2000,
  ntwr = 100000,
  ioutfm = 1,
-/
+ ntxo = 2,
+ nmropt = ${NMROPT},
+/${NMRREST}
 " > ${EQUIINFILE}
 echo
 echo "content of ${EQUIINFILE}:"
@@ -364,7 +378,7 @@ echo "Writing input file ${PRODINFILE} ..."
 echo "
 NVT production for N ns at 300 K.
 This is a restart simulation (irest=1). Coords, velocities and box
-information are read from inpcrd file (ntx=5).
+information are read from inpcrd file (irest=1, ntx=5).
 
 ntb=1: constant volume periodic boundary conditions
 ntc/ntf=2: SHAKE on hydrogens
@@ -392,8 +406,6 @@ e.g. 10000000 steps -> 20 ns
 
 ioutfm=1: write binary (NetCDF) trajectory
 
-Additional Heparin torsional restraints
-
 ntpr: mdinfo and mdout file
 ntwx: coordinates to trajectory file
 ntwr: restart file
@@ -409,7 +421,9 @@ ntwr: restart file
  ntwx = 2000,
  ntwr = 100000,
  ioutfm = 1,
-/
+ ntxo = 2,
+ nmropt = ${NMROPT},
+/${NMRREST}
 " > ${PRODINFILE}
 echo
 echo "content of ${PRODINFILE}:"
@@ -423,4 +437,3 @@ if [ $? != 0 ]; then
     exit 1
 fi
 echo "Production finished."
-
