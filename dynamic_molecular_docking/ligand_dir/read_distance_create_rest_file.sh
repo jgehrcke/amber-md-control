@@ -4,7 +4,12 @@
 # Exit script upon first error.
 set -e
 
-AMBER_SETUP="/projects/bioinfp_apps/amber12_centos58_intel1213_openmpi16_cuda5/setup.sh"
+# To be executed in ligand directory.
+# Set up environment (Amber, Python, ...).
+if [ -f "../env_setup.sh" ]; then
+    source "../env_setup.sh"
+fi
+
 CORE_ATOM_ID=$(cat core_atom_id)
 LIGAND_CENTER_ATOM_ID=$(cat ligand_center_atom_id)
 CORE_CENTER_TARGET_DISTANCE=$(cat core_center_target_distance)
@@ -16,8 +21,6 @@ CPPTRAJ_INPUT_FILENAME="get_ligandcenter_protcore_distance.ptrajin"
 DISTANCE_VALUE_FILENAME="ligandcenter_protcore_distance"
 
 echo "Plan: create DMD tMD restraints file ${DMDPRODRESTFILENAME}."
-echo " >> Sourcing ${AMBER_SETUP}"
-source ${AMBER_SETUP}
 
 CPPTRAJ_INPUT="
 trajin ${EQUITRAJ_FILENAME} lastframe

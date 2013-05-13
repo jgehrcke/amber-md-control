@@ -13,15 +13,10 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-# Set up environment for Amber.
-AMBER_SETUP="/projects/bioinfp_apps/amber12_centos58_intel1213_openmpi16_cuda5/setup.sh"
-MODULE_TEST_OUTPUT=$(command -v module) # valid on ZIH
-if [ $? -eq 0 ]; then
-    echo "Try loading ZIH module amber/12"
-    module load amber/12
-else
-    echo "Sourcing $AMBER_SETUP"
-    source "${AMBER_SETUP}"
+# To be executed in ligand directory.
+# Set up environment (Amber, Python, ...).
+if [ -f "../env_setup.sh" ]; then
+    source "../env_setup.sh"
 fi
 
 # Define MD timings. Boundary condition: MD time step of 2 fs.
