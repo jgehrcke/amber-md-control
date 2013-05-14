@@ -22,8 +22,8 @@ fi
 # Define MD timings. Boundary condition: MD time step of 2 fs.
 # Default within DMD run: 20 ps for heatup (0.02 ns).
 HEATUP_TIME_NS="0.02"
-# Default within DMD run: 0.4 ns for equilibration.
-EQUI_TIME_NS="0.4"
+# Default within DMD run: 1 ns for equilibration.
+EQUI_TIME_NS="1"
 
 
 err() {
