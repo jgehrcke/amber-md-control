@@ -11,7 +11,8 @@ ABSPATH_TO_SCRIPT=$(readlink -f ${SCRIPT_TO_EXECUTE})
 
 echo "execute script in each free MD dir: ${ABSPATH_TO_SCRIPT}"
 
-./find_unfinished_freemd_trajectories.sh --finished-only | while read FREEMDDIR
+./find_unfinished_freemd_trajectories.sh --minframes 2200 | while read FREEMDDIR
+#./find_unfinished_freemd_trajectories.sh --finished-only | while read FREEMDDIR
 do
 cd "$FREEMDDIR"
 echo "Working in $FREEMDDIR (swallowing stdout)..."
@@ -22,3 +23,4 @@ if [ $? -ne 0 ]; then
 fi
 cd "$STARTDIR"
 done
+
