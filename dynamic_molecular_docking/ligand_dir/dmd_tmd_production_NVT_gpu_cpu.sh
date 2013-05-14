@@ -38,14 +38,14 @@ print_run_command () {
     echo "${1}"
     eval "${1}"
     }
-    
+
 # Test validity of arguments.
 test_number() {
     if ! [[ "${1}" =~ ^[0-9]+$ ]] ; then
         err "Not a number: '${1}'. Exit."
         exit 1
     fi
-    }    
+    }
 
 # Check if all required files are available.
 check_required () {
@@ -212,7 +212,7 @@ ntxo = 2: write NetCDF restart files
  nstlim = ${TMD_TIME_STEPS},
  dt = 0.002,
  ntpr = 2000,
- ntwx = 2000,
+ ntwx = 2500,
  ntwr = 100000,
  ioutfm = 1,
  ntxo = 2,
