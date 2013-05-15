@@ -53,6 +53,12 @@ check_required () {
        exit 1
     fi
     }
+check_expected_file () {
+    # Check if file is available, print warning to stderr if not.
+    if [ ! -f "${1}" ]; then
+       err "File ${1} is expected and does not exist."
+    fi
+    }
 print_run_command () {
     echo "Running command:"
     echo "${1}"
@@ -123,11 +129,11 @@ echo
 CMD="time cpptraj -p ${PRMTOP} -i ${INFILE}"
 print_run_command "${CMD}" 2>&1 | tee ${INFILE_WOEXT}.log
 
-check_required $ENTIRE_HBOND_REG_LIG_AVG_DAT_FILE
-check_required $ENTIRE_HBOND_LIG_REG_AVG_DAT_FILE
-check_required $ENTIRE_HBOND_OUT_FILE
+check_expected_file $ENTIRE_HBOND_REG_LIG_AVG_DAT_FILE
+check_expected_file $ENTIRE_HBOND_LIG_REG_AVG_DAT_FILE
+check_expected_file $ENTIRE_HBOND_OUT_FILE
 
-# MEASURE LIGAND MOVEMENT FOR LAST 100 FRAMES.
+# MEASURE LIGAND MOVEMENT FOR LAST N FRAMES.
 STARTFRAMENUMBER=$((TRAJFRAMECOUNT-${LAST_N}+1))
 CPPTRAJINPUT="
 # If only the first frame is given, then cpptraj from there on processes
@@ -149,7 +155,7 @@ CMD="time cpptraj -p ${PRMTOP} -i ${INFILE}"
 print_run_command "${CMD}" 2>&1 | tee ${INFILE_WOEXT}.log
 
 
-check_required $LAST_N_HBOND_REG_LIG_AVG_DAT_FILE
-check_required $LAST_N_HBOND_LIG_REG_AVG_DAT_FILE
-check_required $LAST_N_HBOND_OUT_FILE
+check_expected_file $LAST_N_HBOND_REG_LIG_AVG_DAT_FILE
+check_expected_file $LAST_N_HBOND_LIG_REG_AVG_DAT_FILE
+check_expected_file $LAST_N_HBOND_OUT_FILE
 
