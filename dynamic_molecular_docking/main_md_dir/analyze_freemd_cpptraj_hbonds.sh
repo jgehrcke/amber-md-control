@@ -19,14 +19,14 @@
 
 PRMTOP="top.prmtop"
 TRAJFILE="production_NVT.mdcrd"
-ENTIRE_HBOND_REG_LIG_AVG_DAT_FILE="hbonds_rec_lig_average_entire.dat"
-ENTIRE_HBOND_LIG_REG_AVG_DAT_FILE="hbonds_lig_reg_average_entire.dat"
+ENTIRE_HBOND_REC_LIG_AVG_DAT_FILE="hbonds_rec_lig_average_entire.dat"
+ENTIRE_HBOND_LIG_REC_AVG_DAT_FILE="hbonds_lig_rec_average_entire.dat"
 ENTIRE_HBOND_OUT_FILE="hbonds_out_entire.dat"
 
 LAST_N=250 # 1 ns in case of 2500 frames for 10 ns.
 
-LAST_N_HBOND_REG_LIG_AVG_DAT_FILE="hbonds_rec_lig_average_last_${LAST_N}.dat"
-LAST_N_HBOND_LIG_REG_AVG_DAT_FILE="hbonds_lig_reg_average_last_${LAST_N}.dat"
+LAST_N_HBOND_REC_LIG_AVG_DAT_FILE="hbonds_rec_lig_average_last_${LAST_N}.dat"
+LAST_N_HBOND_LIG_REC_AVG_DAT_FILE="hbonds_lig_rec_average_last_${LAST_N}.dat"
 LAST_N_HBOND_OUT_FILE="hbonds_out_last_${LAST_N}.dat"
 
 
@@ -69,11 +69,11 @@ SCRIPTNAME_WOEXT="${SCRIPTNAME%.*}"
 
 ONE_MISSING=false
 for FILENAME in \
-    $ENTIRE_HBOND_REG_LIG_AVG_DAT_FILE \
-    $ENTIRE_HBOND_LIG_REG_AVG_DAT_FILE \
+    $ENTIRE_HBOND_REC_LIG_AVG_DAT_FILE \
+    $ENTIRE_HBOND_LIG_REC_AVG_DAT_FILE \
     $ENTIRE_HBOND_OUT_FILE \
-    $LAST_N_HBOND_REG_LIG_AVG_DAT_FILE \
-    $LAST_N_HBOND_LIG_REG_AVG_DAT_FILE \
+    $LAST_N_HBOND_REC_LIG_AVG_DAT_FILE \
+    $LAST_N_HBOND_LIG_REC_AVG_DAT_FILE \
     $LAST_N_HBOND_OUT_FILE
 do
     if [ ! -f $FILENAME ]; then
@@ -114,8 +114,8 @@ fi
 INTERVAL=1
 CPPTRAJINPUT="
 trajin ${TRAJFILE} 1 last $INTERVAL
-hbond REC-LIG donormask :${RECEPTOR_RESIDUES} acceptormask :${LIGAND_RESIDUES}@F*,O*,N* out ${ENTIRE_HBOND_OUT_FILE} avgout ${ENTIRE_HBOND_REG_LIG_AVG_DAT_FILE}
-hbond LIG-REC donormask :${LIGAND_RESIDUES} acceptormask :${RECEPTOR_RESIDUES}@F*,O*,N* out ${ENTIRE_HBOND_OUT_FILE} avgout ${ENTIRE_HBOND_LIG_REG_AVG_DAT_FILE}
+hbond REC-LIG donormask :${RECEPTOR_RESIDUES} acceptormask :${LIGAND_RESIDUES}@F*,O*,N* out ${ENTIRE_HBOND_OUT_FILE} avgout ${ENTIRE_HBOND_REC_LIG_AVG_DAT_FILE}
+hbond LIG-REC donormask :${LIGAND_RESIDUES} acceptormask :${RECEPTOR_RESIDUES}@F*,O*,N* out ${ENTIRE_HBOND_OUT_FILE} avgout ${ENTIRE_HBOND_LIG_REC_AVG_DAT_FILE}
 "
 # Write input file.
 INFILE="${SCRIPTNAME_WOEXT}_entiretraj_cpptraj.in"
@@ -129,8 +129,8 @@ echo
 CMD="time cpptraj -p ${PRMTOP} -i ${INFILE}"
 print_run_command "${CMD}" 2>&1 | tee ${INFILE_WOEXT}.log
 
-check_expected_file $ENTIRE_HBOND_REG_LIG_AVG_DAT_FILE
-check_expected_file $ENTIRE_HBOND_LIG_REG_AVG_DAT_FILE
+check_expected_file $ENTIRE_HBOND_REC_LIG_AVG_DAT_FILE
+check_expected_file $ENTIRE_HBOND_LIG_REC_AVG_DAT_FILE
 check_expected_file $ENTIRE_HBOND_OUT_FILE
 
 # MEASURE LIGAND MOVEMENT FOR LAST N FRAMES.
@@ -139,8 +139,8 @@ CPPTRAJINPUT="
 # If only the first frame is given, then cpptraj from there on processes
 # all until the last frame.
 trajin ${TRAJFILE} ${STARTFRAMENUMBER}
-hbond REC-LIG donormask :${RECEPTOR_RESIDUES} acceptormask :${LIGAND_RESIDUES}@F*,O*,N* out ${LAST_N_HBOND_OUT_FILE} avgout ${LAST_N_HBOND_REG_LIG_AVG_DAT_FILE}
-hbond LIG-REC donormask :${LIGAND_RESIDUES} acceptormask :${RECEPTOR_RESIDUES}@F*,O*,N* out ${LAST_N_HBOND_OUT_FILE} avgout ${LAST_N_HBOND_LIG_REG_AVG_DAT_FILE}
+hbond REC-LIG donormask :${RECEPTOR_RESIDUES} acceptormask :${LIGAND_RESIDUES}@F*,O*,N* out ${LAST_N_HBOND_OUT_FILE} avgout ${LAST_N_HBOND_REC_LIG_AVG_DAT_FILE}
+hbond LIG-REC donormask :${LIGAND_RESIDUES} acceptormask :${RECEPTOR_RESIDUES}@F*,O*,N* out ${LAST_N_HBOND_OUT_FILE} avgout ${LAST_N_HBOND_LIG_REC_AVG_DAT_FILE}
 "
 # Write input file.
 INFILE="${SCRIPTNAME_WOEXT}_last_n_frames_cpptraj.in"
@@ -155,7 +155,7 @@ CMD="time cpptraj -p ${PRMTOP} -i ${INFILE}"
 print_run_command "${CMD}" 2>&1 | tee ${INFILE_WOEXT}.log
 
 
-check_expected_file $LAST_N_HBOND_REG_LIG_AVG_DAT_FILE
-check_expected_file $LAST_N_HBOND_LIG_REG_AVG_DAT_FILE
+check_expected_file $LAST_N_HBOND_REC_LIG_AVG_DAT_FILE
+check_expected_file $LAST_N_HBOND_LIG_REC_AVG_DAT_FILE
 check_expected_file $LAST_N_HBOND_OUT_FILE
 
