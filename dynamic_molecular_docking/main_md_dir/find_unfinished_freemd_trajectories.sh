@@ -106,9 +106,11 @@ for LIGDIR in ligand_*; do
             err "$(pwd): netcdftraj_framecount returned with error."
             cd ../../ ; exit
         fi
-        if [ "$FRAMECOUNTACTUAL" -ge "$MINFRAMES" ] ; then
-            echo $PWD
-            cd ../../ ; continue
+        if $CHECKMINFRAMES; then
+            if [ "$FRAMECOUNTACTUAL" -ge "$MINFRAMES" ] ; then
+                echo $PWD
+                cd ../../ ; continue
+            fi
         fi
         log "${FRAMECOUNTACTUAL} frames."
         cd ../../ ;
