@@ -15,6 +15,8 @@
 #   limitations under the License.
 #
 
+set -eu
+
 err() {
     # Print error message to stderr.
     echo "ERROR >>> $@" 1>&2
@@ -25,48 +27,47 @@ log() {
     echo "INFO  >>> $@"
     }
 
-PREFIX="../06_md"
+MD_PREFIX="../06_md"
 
-exit
-#TOOD: 
-# Extract mmpbsa_200ps_after_freemd score
-OUTFILE="mmpbsa_freemd_last100frames_all_ligands.dat"
+OUT_DIR_TOP="hbond_analysis"
+rm -rf "$OUT_DIR_TOP"
+mkdir "$OUT_DIR_TOP"
+
+
+# Analyze cpptraj's AVGOUT files.
+find "$MD_PREFIX" -name "hbonds_rec_lig_average_last_250.dat" | python analyze_hbond_avgout.py "${OUT_DIR_TOP}/freemd_last_250_frames"
+
+
+# Extract H-bond data (only count H-bonds with receptor being H-bond donor)
+OUTFILE="hbonds_freemd_avg_number_last250frames.dat"
 log "Creating $OUTFILE ..."
 # Overwrite file
-echo "run_id,mmpbsa_freemdlast100frames_deltag,mmpbsa_freemdlast100frames_deltag_stddev,mmpbsa_freemdlast100frames_deltaeel,mmpbsa_freemdlast100frames_deltaeel_stddev" > $OUTFILE
-find ${PREFIX} -wholename "*tmd_*/freemd/mmpbsa_last100frames/FINAL_RESULTS_MMPBSA.dat" | \
+echo "run_id,hbonds_freemd_avg_number_last250frames_mean,hbonds_freemd_avg_number_last250frames_stddev" > "$OUTFILE"
+find "${MD_PREFIX}" -wholename "*tmd_*/freemd/hbonds_out_last_250.dat" | \
 while read FILE
 do
     log "Processing file '$FILE' ..."
     RUNID=$(echo "$FILE" | utils/collect_pdb_files_with_run_id.py --print-run-ids)
-    DELTAG=$(cat $FILE | grep "DELTA TOTAL" | awk '{print $3}')
-    DELTAG_STDDEV=$(cat $FILE | grep "DELTA TOTAL" | awk '{print $4}')
-    EEL=$(cat $FILE | tail -n20 | head -n6 | grep EEL | awk '{print $2}')
-    EEL_STDDEV=$(cat $FILE | tail -n20 | head -n6 | grep EEL | awk '{print $3}')
+    MEAN_STDDEV_DATASTRING=$(tail -n +2 "$FILE" | mean_stddev --formatted)
+    MEAN=$(echo $MEAN_STDDEV_DATASTRING | awk '{print $3}')
+    STDDEV=$(echo $MEAN_STDDEV_DATASTRING | awk '{print $4}')
     # Append to file.
-    echo "${RUNID},${DELTAG},${DELTAG_STDDEV},${EEL},${EEL_STDDEV}" >> $OUTFILE
+    echo "${RUNID},${MEAN},${STDDEV}" >> $OUTFILE
 done
 
-exit
 
-# Extract mmpbsa_after_smd score
-OUTFILE="mmpbsa_after_smd_all_ligands.dat"
+OUTFILE="hbonds_freemd_avg_number_entiretraj.dat"
 log "Creating $OUTFILE ..."
 # Overwrite file
-echo "run_id,mmpbsa_after_smd_deltag,mmpbsa_after_smd_deltaeel" > $OUTFILE
-find ${PREFIX} -regextype posix-extended -regex ".*SMD_PROD_.*[[:digit:]]\/mmpbsa_lastframe/FINAL_RESULTS_MMPBSA.dat" | \
+echo "run_id,hbonds_freemd_avg_number_entiretraj_mean,hbonds_freemd_avg_number_entiretraj_stddev" > "$OUTFILE"
+find "${MD_PREFIX}" -wholename "*tmd_*/freemd/hbonds_out_last_250.dat" | \
 while read FILE
 do
-    RUNID=$(../scripts/run_id_from_path.py $FILE)
-    DELTAG=$(cat $FILE | grep "DELTA G binding" | awk '{print $5}')
-    EEL=$(cat $FILE | tail -n20 | head -n6 | grep EEL | awk '{print $2}')
+    log "Processing file '$FILE' ..."
+    RUNID=$(echo "$FILE" | utils/collect_pdb_files_with_run_id.py --print-run-ids)
+    MEAN_STDDEV_DATASTRING=$(tail -n +2 "$FILE" | mean_stddev --formatted)
+    MEAN=$(echo $MEAN_STDDEV_DATASTRING | awk '{print $3}')
+    STDDEV=$(echo $MEAN_STDDEV_DATASTRING | awk '{print $4}')
     # Append to file.
-    echo "${RUNID},${DELTAG},${EEL}" >> $OUTFILE
+    echo "${RUNID},${MEAN},${STDDEV}" >> $OUTFILE
 done
-
-
-
-
-
-
-

@@ -31,7 +31,7 @@ logging.basicConfig(
     format='%(asctime)s:%(msecs)05.1f  %(levelname)s: %(message)s',
     datefmt='%H:%M:%S')
 log = logging.getLogger()
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 
 RECEPTOR_RESIDUE_FRACTIONS = defaultdict(list)
@@ -46,6 +46,7 @@ def main():
     os.mkdir(output_dir)
     logfilepath = os.path.join(output_dir, "%s.log" % sys.argv[0])
     fh = logging.FileHandler(logfilepath, encoding='utf-8')
+    fh.setLevel(logging.DEBUG)
     log.addHandler(fh)
 
     if len(sys.argv) > 2:
@@ -76,6 +77,7 @@ def evaluate_plot_data(nbr_processed_data_sets, output_dir):
     # For each receptor residue sum up fractions from all trajectories and
     # normalize. Fill 'holes' in this interation, too (see above).
     rec_residue_frac_normsums = dict()
+    log.info("Normalizing data...")
     for donor_resname, fraction_list in RECEPTOR_RESIDUE_FRACTIONS.iteritems():
         rec_residue_frac_normsums[donor_resname] = sum(fraction_list) / \
             nbr_processed_data_sets
@@ -104,6 +106,8 @@ def evaluate_plot_data(nbr_processed_data_sets, output_dir):
     mpop_fractions_lists = [RECEPTOR_RESIDUE_FRACTIONS[n] for n in mpop_resnames]
     mpop_fractions_normsums = rec_residue_frac_normsums_ser[:top]
 
+    log.info("Creating mean occupancy plot.")
+
     # Plot data about most occupied/populated donor residues in receptor.
     # First, plot normalized cumulative occupancy of single residues,
     # i.e. the time-average of occupancy over all input data
@@ -131,6 +135,7 @@ def evaluate_plot_data(nbr_processed_data_sets, output_dir):
     p = os.path.join(output_dir, "normalized_occupancy_top.png")
     plt.savefig(p, dpi=200)
 
+    log.info("Creating mean occupancy plot (box plot).")
     # Now plot the same thing, but as boxplot indicating the distribution
     # leading to the mean values used above.
     plt.figure()
@@ -149,7 +154,7 @@ def evaluate_plot_data(nbr_processed_data_sets, output_dir):
     p = os.path.join(output_dir, "occupancy_boxplots_top.png")
     plt.savefig(p, dpi=200)
 
-
+    log.info("Creating single-residue occupancy plots (histograms).")
     # Now plot the exact distributions as histograms for each mean value above.
     figures_resnames = []
     #xlims_lower = []
