@@ -6,7 +6,7 @@ if [ -f "./env_setup.sh" ]; then
 fi
 
 STARTDIR="$PWD"
-SCRIPT_TO_EXECUTE="./analyze_freemd_traj_cpptraj.sh"
+SCRIPT_TO_EXECUTE="./analyze_freemd_cpptraj_movement.sh"
 ABSPATH_TO_SCRIPT=$(readlink -f ${SCRIPT_TO_EXECUTE})
 
 echo "execute script in each free MD dir: ${ABSPATH_TO_SCRIPT}"
