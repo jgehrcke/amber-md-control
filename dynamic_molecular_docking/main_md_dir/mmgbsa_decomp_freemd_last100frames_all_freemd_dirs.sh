@@ -1,9 +1,14 @@
 #!/bin/bash
 
 STARTDIR="$PWD"
-SCRIPT_TO_EXECUTE="./mmgbsa_decomp_freemd_last100frames.sh"
+SCRIPT_TO_EXECUTE="./mmgbsa_decomp_freemd_lastNframes.sh"
 ABSPATH_TO_SCRIPT=$(readlink -f ${SCRIPT_TO_EXECUTE})
 NBR_CPUS=$1
+
+if [[ ! -x "$SCRIPT_TO_EXECUTE" ]]; then
+    echo "Does not exist or not executable: $SCRIPT_TO_EXECUTE"
+    exit 1
+fi
 
 # Set up environment (Amber, Python, ...).
 if [ -f "./env_setup.sh" ]; then
