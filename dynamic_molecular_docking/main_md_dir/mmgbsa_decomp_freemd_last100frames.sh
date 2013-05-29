@@ -16,22 +16,20 @@
 #
 
 # To be executed in freemd dir.
-# Requires patched AmberTools12.
+# Requires patched AmberTools12 or AT 13.
 
 # Set up environment (Amber, Python, ...).
 if [ -f "../../../env_setup.sh" ]; then
     source "../../../env_setup.sh"
 fi
 
-PROJECT="mmgbsa_decomp_last100frames"
+LAST_N=250
+PROJECT="mmgbsa_decomp_last${LAST_N}frames"
 TRAJFILE="production_NVT.mdcrd"
 TOP_UNSOLVATED_COMPLEX="complex_unsolvated.prmtop"
 TOP_SOLVATED_COMPLEX="top.prmtop"
 TOP_RECEPTOR="receptor.prmtop"
 TOP_LIGAND="ligand.prmtop"
-#EXECUTABLE="MMPBSA" # AmberTools 1.5
-EXECUTABLE="MMPBSA.py" # AmberTools 12
-
 
 err() {
     # Print error message to stderr.
@@ -74,7 +72,8 @@ if ! [[ "${CPUNUMBER}" =~ ^[0-9]+$ ]] ; then
    err "Not a number: ${CPUNUMBER}. Exit."
    exit 1
 fi
-log "Setting up MMPBSA on ${CPUNUMBER} CPU core(s)."
+log "Setting up MMGBSA decomp on ${CPUNUMBER} CPU core(s)."
+EXECUTABLE="MMPBSA.py"
 # Define engine (distinguish serial/parallel).
 if (( "${CPUNUMBER}" > "1" )); then
     EXECUTABLE="${EXECUTABLE}.MPI"
@@ -90,8 +89,9 @@ if [ -z ${MMPBSAEXE} ]; then
 fi
 log "$EXECUTABLE path: '${MMPBSAEXE}'"
 
-# Exit upon error.
+# Exit upon error, assert upon un-initialized variables.
 set -e
+set -u
 
 check_required $TRAJFILE
 check_required $TOP_UNSOLVATED_COMPLEX
@@ -105,7 +105,7 @@ if [ $? != 0 ]; then
     err "$(pwd): netcdftraj_framecount returned with error."
     exit 1
 fi
-STARTFRAMENUMBER=$((TRAJFRAMECOUNT-100+1))
+STARTFRAMENUMBER=$((TRAJFRAMECOUNT-${LAST_N}+1))
 ENDFRAMENUMBER=$TRAJFRAMECOUNT
 
 # MMPBSA input file.
@@ -141,7 +141,6 @@ log "Content of ${INFILE}:"
 cat ${INFILE}
 echo
 echo
-
 
 CMD="time ${ENGINE} -O -i ${INFILE} \
     -cp ../${TOP_UNSOLVATED_COMPLEX} \
