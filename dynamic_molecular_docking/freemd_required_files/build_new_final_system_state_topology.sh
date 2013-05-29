@@ -22,6 +22,9 @@ fi
 # exit upon error
 set -e
 
+# 'tleap' might be an alias defined in amber setup script, the alias should be used here.
+shopt -s expand_aliases
+
 PRMTOP="top.prmtop"
 TRAJFILE="dmd_tmd_NVT.mdcrd"
 
