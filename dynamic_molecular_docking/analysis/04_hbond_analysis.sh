@@ -60,7 +60,7 @@ OUTFILE="hbonds_freemd_avg_number_entiretraj.dat"
 log "Creating $OUTFILE ..."
 # Overwrite file
 echo "run_id,hbonds_freemd_avg_number_entiretraj_mean,hbonds_freemd_avg_number_entiretraj_stddev" > "$OUTFILE"
-find "${MD_PREFIX}" -wholename "*tmd_*/freemd/hbonds_out_last_250.dat" | \
+find "${MD_PREFIX}" -wholename "*tmd_*/freemd/hbonds_out_entire.dat" | \
 while read FILE
 do
     log "Processing file '$FILE' ..."

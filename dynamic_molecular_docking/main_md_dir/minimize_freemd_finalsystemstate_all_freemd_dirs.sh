@@ -4,6 +4,11 @@ STARTDIR="$PWD"
 SCRIPT_TO_EXECUTE="./minimize_freemd_finalsystemstate.sh"
 ABSPATH_TO_SCRIPT=$(readlink -f ${SCRIPT_TO_EXECUTE})
 
+if [[ ! -x "$SCRIPT_TO_EXECUTE" ]]; then
+    echo "Does not exist or not executable: $SCRIPT_TO_EXECUTE"
+    exit 1
+fi
+
 # Set up environment (Amber, Python, ...).
 if [ -f "./env_setup.sh" ]; then
     source "./env_setup.sh"
