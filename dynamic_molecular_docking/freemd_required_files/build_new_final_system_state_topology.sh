@@ -19,8 +19,8 @@
 if [ -f "../../../env_setup.sh" ]; then
     source "../../../env_setup.sh"
 fi
-# exit upon error
-set -e
+# Don't exit upon error, exit code interpretation is done below.
+#set -e
 
 # 'tleap' might be an alias defined in amber setup script, the alias should be used here.
 shopt -s expand_aliases
@@ -30,7 +30,7 @@ TRAJFILE="dmd_tmd_NVT.mdcrd"
 
 err() {
     # Print error message to stderr.
-    echo "$@" 1>&2;
+    echo "ERROR >>> $@" 1>&2;
     }
 
 log() {
@@ -72,11 +72,52 @@ check_required ligand_residues
 RECEPTOR_RESIDUES=$(cat receptor_residues)
 LIGAND_RESIDUES=$(cat ligand_residues)
 
-
 log "Extracting receptor PDB from final state."
 print_run_command "../../../trajframe_to_pdb_using_stripmask.sh ../${PRMTOP} ../${TRAJFILE} lastframe '!:${RECEPTOR_RESIDUES}' final_receptor_state.pdb"
 log "Extracting ligand PDB from final state."
 print_run_command "../../../trajframe_to_pdb_using_stripmask.sh ../${PRMTOP} ../${TRAJFILE} lastframe '!:${LIGAND_RESIDUES}' final_ligand_state.pdb"
+
+# Check the distance between receptor and ligand after pulling process.
+# Actually, evaluate the minimal distance.
+# If the minimal distance is larger than a certain threshold, do not
+# prepare this system for free MD (do not run leap).
+
+# Delete output file if existing.
+rm -f receptor_ligand_min_distance
+# Define maximum allowed distance in Angstrom.
+MAXDIST=3
+# Extract minimal distance with Python (scipy, Biopython).
+python - <<EOF
+import sys
+import numpy as np
+from scipy.spatial import distance
+from Bio.PDB.PDBParser import PDBParser # Requires Biopython
+p = PDBParser(PERMISSIVE=1)
+r = p.get_structure('receptor', 'final_receptor_state.pdb')
+l = p.get_structure('ligand', 'final_ligand_state.pdb')
+r_atom_coords = [a.get_coord() for a in r.get_atoms()]
+l_atom_coords = [a.get_coord() for a in l.get_atoms()]
+distancematrix = distance.cdist(r_atom_coords, l_atom_coords, 'euclidean')
+min_distance = np.min(distancematrix)
+with open('receptor_ligand_min_distance', 'w') as f:
+    f.write(str(min_distance))
+if min_distance > $MAXDIST:
+    sys.exit(20)
+sys.exit(0)
+EOF
+EXITCODE=$?
+if [[ ( "${EXITCODE}" == 20 ) || ( "${EXITCODE}" == 0 ) ]]; then
+    check_required receptor_ligand_min_distance
+    log "Minimal distance between receptor and ligand: $(cat receptor_ligand_min_distance) Angstroms."
+fi
+if [[ ${EXITCODE} == 20 ]]; then
+    err "Distance larger than $MAXDIST Angstroms. Exit."
+    exit 1
+elif [[ ${EXITCODE} != 0 ]]; then
+    err "Distance extraction failed. Exit."
+    exit 1
+fi
+
 
 if [ -d ~/leap_search_path ]; then
     print_run_command "tleap -I ~/leap_search_path -f leap.in > leap.stdouterr 2>&1"
