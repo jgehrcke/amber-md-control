@@ -83,7 +83,8 @@ print_run_command "../../../trajframe_to_pdb_using_stripmask.sh ../${PRMTOP} ../
 # prepare this system for free MD (do not run leap).
 
 # Delete output file if existing.
-rm -f receptor_ligand_min_distance
+DISTFILE="receptor_ligand_min_distance_after_tmd"
+rm -f $DISTFILE
 # Define maximum allowed distance in Angstrom.
 MAXDIST=3
 # Extract minimal distance with Python (scipy, Biopython).
@@ -99,7 +100,7 @@ r_atom_coords = [a.get_coord() for a in r.get_atoms()]
 l_atom_coords = [a.get_coord() for a in l.get_atoms()]
 distancematrix = distance.cdist(r_atom_coords, l_atom_coords, 'euclidean')
 min_distance = np.min(distancematrix)
-with open('receptor_ligand_min_distance', 'w') as f:
+with open('$DISTFILE', 'w') as f:
     f.write(str(min_distance))
 if min_distance > $MAXDIST:
     sys.exit(20)
@@ -107,14 +108,14 @@ sys.exit(0)
 EOF
 EXITCODE=$?
 if [[ ( "${EXITCODE}" == 20 ) || ( "${EXITCODE}" == 0 ) ]]; then
-    check_required receptor_ligand_min_distance
-    log "Minimal distance between receptor and ligand: $(cat receptor_ligand_min_distance) Angstroms."
+    check_required $DISTFILE
+    log "Minimal distance between receptor and ligand: $(cat $DISTFILE) Angstroms."
 fi
 if [[ ${EXITCODE} == 20 ]]; then
-    err "Distance larger than $MAXDIST Angstroms. Exit."
-    exit 1
+    err "Distance larger than $MAXDIST Angstroms. Exit (rc 0)."
+    exit
 elif [[ ${EXITCODE} != 0 ]]; then
-    err "Distance extraction failed. Exit."
+    err "Distance extraction failed unexpectedly. Exit."
     exit 1
 fi
 
