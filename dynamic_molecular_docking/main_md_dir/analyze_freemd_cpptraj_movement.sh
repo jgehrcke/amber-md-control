@@ -17,12 +17,13 @@
 
 # To be executed in freemd dir.
 
+LAST_N=250
 PRMTOP="top.prmtop"
 TRAJFILE="production_NVT.mdcrd"
 RMSOUT_RELATIVE_ENTIRE="rmsd_ligand_relative_over_frames_entiretraj.dat"
 RMSOUT_INTERNAL_ENTIRE="rmsd_ligand_internal_over_frames_entiretraj.dat"
-RMSOUT_RELATIVE_LAST="rmsd_ligand_relative_over_frames_last_100frames.dat"
-RMSOUT_INTERNAL_LAST="rmsd_ligand_internal_over_frames_last_100frames.dat"
+RMSOUT_RELATIVE_LAST="rmsd_ligand_relative_over_frames_last${LAST_N}frames.dat"
+RMSOUT_INTERNAL_LAST="rmsd_ligand_internal_over_frames_last${LAST_N}frames.dat"
 
 err() {
     # Print error message to stderr.
@@ -112,8 +113,8 @@ check_required ${RMSOUT_RELATIVE_ENTIRE}
 check_required ${RMSOUT_INTERNAL_ENTIRE}
 
 
-# MEASURE LIGAND MOVEMENT FOR LAST 100 FRAMES.
-STARTFRAMENUMBER=$((TRAJFRAMECOUNT-100+1))
+# MEASURE LIGAND MOVEMENT FOR LAST N FRAMES.
+STARTFRAMENUMBER=$((TRAJFRAMECOUNT-${LAST_N}+1))
 CPPTRAJINPUT="
 # If only the first frame is given, then cpptraj from there on processes
 # all until the last frame.
@@ -126,7 +127,7 @@ rmsd :${LIGAND_RESIDUES} first nofit out ${RMSOUT_RELATIVE_LAST}
 rmsd :${LIGAND_RESIDUES} first out ${RMSOUT_INTERNAL_LAST}
 "
 # Write input file.
-INFILE="${SCRIPTNAME_WOEXT}_last100frames_cpptraj.in"
+INFILE="${SCRIPTNAME_WOEXT}_last${LAST_N}frames_cpptraj.in"
 INFILE_WOEXT="${INFILE%.*}"
 log "Writing input file: ${INFILE}."
 echo "${CPPTRAJINPUT}" > ${INFILE}
@@ -138,4 +139,3 @@ CMD="time cpptraj -p ${PRMTOP} -i ${INFILE}"
 print_run_command "${CMD}" 2>&1 | tee ${INFILE_WOEXT}.log
 check_required ${RMSOUT_RELATIVE_LAST}
 check_required ${RMSOUT_INTERNAL_LAST}
-
