@@ -15,13 +15,15 @@
 #   limitations under the License.
 #
 
-# To be executed in freemd dir.
-# Requires patched AmberTools12 or AT 13.
+# To be executed in free MD dir.
+# Requires patched AmberTools13.
 
-# Set up environment (Amber, Python, ...).
+# Set up environment (Amber, Python, ...), exit upon error.
 if [ -f "../../../env_setup.sh" ]; then
     source "../../../env_setup.sh"
 fi
+# Now, DMD_CODE_DIR is defined.
+source "${DMD_CODE_DIR}/common_code.sh"
 
 LAST_N=250
 PROJECT="mmgbsa_decomp_last${LAST_N}frames"
@@ -31,33 +33,6 @@ TOP_SOLVATED_COMPLEX="top.prmtop"
 TOP_RECEPTOR="receptor.prmtop"
 TOP_LIGAND="ligand.prmtop"
 
-err() {
-    # Print error message to stderr.
-    echo "$@" 1>&2;
-    }
-log() {
-    # Print message to stdout.
-    echo "INFO  >>> $@"
-    }
-check_delete () {
-    # Delete file if existing.
-    if [ -f "${1}" ]; then
-        echo "Deleting ${1} ..."
-        rm -f "${1}"
-    fi
-    }
-check_required () {
-    # Check if file is available, exit if not.
-    if [ ! -f "${1}" ]; then
-       err "File ${1} is required and does not exist. Exit."
-       exit 1
-    fi
-    }
-print_run_command () {
-    echo "Running command:"
-    echo "${1}"
-    eval "${1}"
-    }
 SCRIPTNAME="$(basename "$0")"
 SCRIPTNAME_WOEXT="${SCRIPTNAME%.*}"
 
@@ -89,9 +64,8 @@ if [ -z ${MMPBSAEXE} ]; then
 fi
 log "$EXECUTABLE path: '${MMPBSAEXE}'"
 
-# Exit upon error, assert upon un-initialized variables.
+# Exit upon error.
 set -e
-set -u
 
 check_required $TRAJFILE
 check_required $TOP_UNSOLVATED_COMPLEX
