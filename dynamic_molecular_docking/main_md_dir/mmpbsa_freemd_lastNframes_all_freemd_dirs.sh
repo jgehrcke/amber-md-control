@@ -1,9 +1,9 @@
 #!/bin/bash
 
 STARTDIR="$PWD"
-SCRIPT_TO_EXECUTE="./mmpbsa_freemd_last100frames.sh"
+SCRIPT_TO_EXECUTE="./mmpbsa_freemd_lastNframes.sh"
 ABSPATH_TO_SCRIPT=$(readlink -f ${SCRIPT_TO_EXECUTE})
-NBR_CPUS=$1
+NBR_CPUS="$1"
 
 # Set up environment (Amber, Python, ...).
 if [ -f "./env_setup.sh" ]; then
@@ -27,6 +27,7 @@ do
     ${ABSPATH_TO_SCRIPT} "$NBR_CPUS" 1> /dev/null < /dev/null
     if [ $? -ne 0 ]; then
         echo "Error observed. Abort free MD dir iteration."
+        cd "$STARTDIR"
         exit 1
     fi
     cd "$STARTDIR"
