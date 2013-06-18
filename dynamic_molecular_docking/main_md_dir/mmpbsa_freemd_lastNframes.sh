@@ -103,8 +103,6 @@ cat ${INFILE}
 echo
 echo
 
-exit 1
-
 CMD="time ${ENGINE} -O -i ${INFILE} \
     -cp ../${TOP_UNSOLVATED_COMPLEX} \
     -sp ../${TOP_SOLVATED_COMPLEX} \
