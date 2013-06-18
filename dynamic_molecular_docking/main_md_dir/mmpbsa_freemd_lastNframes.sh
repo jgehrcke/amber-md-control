@@ -23,7 +23,8 @@ if [ -f "../../../env_setup.sh" ]; then
     source "../../../env_setup.sh"
 fi
 
-PROJECT="mmpbsa_last100frames"
+LAST_N=250
+PROJECT="mmpbsa_last${LAST_N}frames"
 TRAJFILE="production_NVT.mdcrd"
 TOP_UNSOLVATED_COMPLEX="complex_unsolvated.prmtop"
 TOP_SOLVATED_COMPLEX="top.prmtop"
@@ -105,7 +106,7 @@ if [ $? != 0 ]; then
     err "$(pwd): netcdftraj_framecount returned with error."
     exit 1
 fi
-STARTFRAMENUMBER=$((TRAJFRAMECOUNT-100+1))
+STARTFRAMENUMBER=$((TRAJFRAMECOUNT-${LAST_N}+1))
 ENDFRAMENUMBER=$TRAJFRAMECOUNT
 
 # MMPBSA input file.
@@ -141,7 +142,6 @@ log "Content of ${INFILE}:"
 cat ${INFILE}
 echo
 echo
-
 
 CMD="time ${ENGINE} -O -i ${INFILE} \
     -cp ../${TOP_UNSOLVATED_COMPLEX} \
