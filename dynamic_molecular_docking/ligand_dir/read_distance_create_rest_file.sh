@@ -7,18 +7,11 @@
 if [ -f "../env_setup.sh" ]; then
     source "../env_setup.sh"
 fi
+# Now, DMD_CODE_DIR is defined.
+source "${DMD_CODE_DIR}/common_code.sh"
 
-# Exit script upon attempt to use an uninitialised variable.
-set -o nounset
 # Exit script upon first error.
 set -o errexit
-
-check_required () {
-    if [ ! -f $1 ]; then
-       err "File $1 is required and does not exist. exit."
-       exit 1
-    fi
-    }
 
 check_required core_atom_id
 check_required ligand_center_atom_id

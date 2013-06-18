@@ -1,21 +1,14 @@
 #!/bin/bash
-#
-#   Copyright 2012-2013 Jan-Philip Gehrcke
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
-#
+# Copyright 2012-2013 Jan-Philip Gehrcke, http://gehrcke.de
 
 # To be executed in freemd dir.
+
+# Set up environment (Amber, Python, ...), exit upon error.
+if [ -f "../../../env_setup.sh" ]; then
+    source "../../../env_setup.sh"
+fi
+# Now, DMD_CODE_DIR is defined.
+source "${DMD_CODE_DIR}/common_code.sh"
 
 LAST_N=250
 PRMTOP="top.prmtop"
@@ -25,43 +18,14 @@ RMSOUT_INTERNAL_ENTIRE="rmsd_ligand_internal_over_frames_entiretraj.dat"
 RMSOUT_RELATIVE_LAST="rmsd_ligand_relative_over_frames_last${LAST_N}frames.dat"
 RMSOUT_INTERNAL_LAST="rmsd_ligand_internal_over_frames_last${LAST_N}frames.dat"
 
-err() {
-    # Print error message to stderr.
-    echo "$@" 1>&2;
-    }
-log() {
-    # Print message to stdout.
-    echo "INFO  >>> $@"
-    }
-check_delete () {
-    # Delete file if existing.
-    if [ -f "${1}" ]; then
-        echo "Deleting ${1} ..."
-        rm -f "${1}"
-    fi
-    }
-check_required () {
-    # Check if file is available, exit if not.
-    if [ ! -f "${1}" ]; then
-       err "File ${1} is required and does not exist. Exit."
-       exit 1
-    fi
-    }
-print_run_command () {
-    echo "Running command:"
-    echo "${1}"
-    eval "${1}"
-    }
 SCRIPTNAME="$(basename "$0")"
 SCRIPTNAME_WOEXT="${SCRIPTNAME%.*}"
-
 
 if [ -f "$RMSOUT_RELATIVE_ENTIRE" ] && [ -f "$RMSOUT_INTERNAL_ENTIRE" ] && \
    [ -f "$RMSOUT_RELATIVE_LAST" ] && [ -f "$RMSOUT_INTERNAL_LAST" ]; then
     err "All output files already exist. Exit without error."
     exit 0
 fi
-
 
 CPPTRAJ=$(command -v cpptraj)
 if [ -z ${CPPTRAJ} ]; then

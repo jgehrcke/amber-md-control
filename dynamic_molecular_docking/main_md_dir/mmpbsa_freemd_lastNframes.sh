@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 2013 Jan-Philip Gehrcke, http://gehrcke.de
+# Copyright 2012-2013 Jan-Philip Gehrcke, http://gehrcke.de
 
 # To be executed in free MD dir.
 # Requires patched AmberTools13.

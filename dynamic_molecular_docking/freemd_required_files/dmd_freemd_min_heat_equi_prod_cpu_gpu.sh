@@ -1,25 +1,16 @@
 #!/bin/bash
-#   Copyright 2012-2013 Jan-Philip Gehrcke
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
+# Copyright 2012-2013 Jan-Philip Gehrcke, http://gehrcke.de
 
 # To be executed in free MD directory.
 
-# Set up environment (Amber, Python, ...).
+# To be executed in free MD dir.
+
+# Set up environment (Amber, Python, ...), exit upon error.
 if [ -f "../../../env_setup.sh" ]; then
     source "../../../env_setup.sh"
 fi
-
+# Now, DMD_CODE_DIR is defined.
+source "${DMD_CODE_DIR}/common_code.sh"
 
 # Define MD timings in ns. Boundary condition: MD time step of 2 fs.
 HEATUP_TIME_NS="0.02"
@@ -29,40 +20,6 @@ PROD_TIME_NS="10"
 HEATUP_TIME_STEPS=$(python -c "print int(${HEATUP_TIME_NS}*1000000*0.5)")
 EQUI_TIME_STEPS=$(python -c "print int(${EQUI_TIME_NS}*1000000*0.5)")
 PROD_TIME_STEPS=$(python -c "print int(${PROD_TIME_NS}*1000000*0.5)")
-
-err() {
-    # Print error message to stderr.
-    echo "$@" 1>&2;
-    }
-
-check_delete () {
-    # Delete file if existing.
-    if [ -f "${1}" ]; then
-        echo "Deleting ${1} ..."
-        rm -f "${1}"
-    fi
-    }
-
-check_required () {
-    # Check if file is available, exit if not.
-    if [ ! -f "${1}" ]; then
-       err "File ${1} is required and does not exist. Exit."
-       exit 1
-    fi
-    }
-
-print_run_command () {
-    echo "Running command:"
-    echo "${1}"
-    eval "${1}"
-    }
-
-test_number() {
-    if ! [[ "${1}" =~ ^[0-9]+$ ]] ; then
-        err "Not a number: '${1}'. Exit."
-        exit 1
-    fi
-    }
 
 SCRIPTNAME="$(basename "$0")"
 

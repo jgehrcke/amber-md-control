@@ -1,64 +1,20 @@
 #!/bin/bash
-#   Copyright 2012-2013 Jan-Philip Gehrcke
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
+# Copyright 2012-2013 Jan-Philip Gehrcke, http://gehrcke.de
 
 # To be executed in free MD directory.
 
-# Set up environment (Amber, Python, ...).
+# Set up environment (Amber, Python, ...), exit upon error.
 if [ -f "../../../env_setup.sh" ]; then
     source "../../../env_setup.sh"
 fi
-# Don't exit upon error, exit code interpretation is done below.
-#set -e
+# Now, DMD_CODE_DIR is defined.
+source "${DMD_CODE_DIR}/common_code.sh"
 
 # 'tleap' might be an alias defined in amber setup script, the alias should be used here.
 shopt -s expand_aliases
 
 PRMTOP="top.prmtop"
 TRAJFILE="dmd_tmd_NVT.mdcrd"
-
-err() {
-    # Print error message to stderr.
-    echo "ERROR >>> $@" 1>&2;
-    }
-
-log() {
-    # Print message to stdout.
-    echo "INFO  >>> $@"
-    }
-
-check_delete () {
-    # Delete file if existing.
-    if [ -f "${1}" ]; then
-        echo "Deleting ${1} ..."
-        rm -f "${1}"
-    fi
-    }
-
-check_required () {
-    # Check if file is available, exit if not.
-    if [ ! -f "${1}" ]; then
-       err "File ${1} is required and does not exist. Exit."
-       exit 1
-    fi
-    }
-
-print_run_command () {
-    echo "Running command:"
-    echo "${1}"
-    eval "${1}"
-    }
 
 # To be executed in freemd dir.
 # One up is tMD dir. Two up is equi MD dir. Three up is main MD dir.
