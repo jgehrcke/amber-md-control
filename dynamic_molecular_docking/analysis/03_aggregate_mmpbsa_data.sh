@@ -1,31 +1,18 @@
 #!/bin/bash
-#
-#   Copyright (C) 2012-2013 Jan-Philip Gehrcke
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
-#
+# Copyright 2012-2013 Jan-Philip Gehrcke, BIOTEC, TU Dresden
+# http://gehrcke.de#
 
-err() {
-    # Print error message to stderr.
-    echo "ERROR >>> $@" 1>&2
-    }
-
-log() {
-    # Print message to stdout.
-    echo "INFO  >>> $@"
-    }
-
-PREFIX="../06_md"
+MD_DIR="../06_md"
+# Set up environment (Amber, Python, ...), exit upon error.
+if [ -f "${MD_DIR}/env_setup.sh" ]; then
+    source "${MD_DIR}/env_setup.sh"
+else
+    echo "file missing: ${MD_DIR}/env_setup.sh"
+    exit 1
+fi
+# Now, DMD_CODE_DIR is defined.
+source "${DMD_CODE_DIR}/common_code.sh"
+set -e
 
 
 # Extract mmpbsa_200ps_after_freemd score

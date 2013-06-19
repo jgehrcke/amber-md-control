@@ -1,5 +1,6 @@
 #!/bin/bash
-# Copyright 2012-2013 Jan-Philip Gehrcke, http://gehrcke.de
+# Copyright 2012-2013 Jan-Philip Gehrcke, BIOTEC, TU Dresden
+# http://gehrcke.de
 
 # To be executed in freemd dir.
 

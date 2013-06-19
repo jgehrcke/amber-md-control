@@ -1,5 +1,6 @@
 #!/bin/bash
-# Copyright 2012-2013 Jan-Philip Gehrcke, http://gehrcke.de
+# Copyright 2012-2013 Jan-Philip Gehrcke, BIOTEC, TU Dresden
+# http://gehrcke.de
 
 MD_DIR="../06_md"
 # Set up environment (Amber, Python, ...), exit upon error.

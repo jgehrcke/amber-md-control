@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright 2012-2013 Jan-Philip Gehrcke, BIOTEC, TU Dresden
+# http://gehrcke.de
 
 STARTDIR="$PWD"
 SCRIPT_TO_EXECUTE="./mmpbsa_freemd_lastNframes.sh"
