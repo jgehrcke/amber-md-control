@@ -1,34 +1,19 @@
 #!/bin/bash
-#
-#   Copyright 2012-2013 Jan-Philip Gehrcke
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
-#
+# Copyright 2012-2013 Jan-Philip Gehrcke, BIOTEC, TU Dresden
+# http://gehrcke.de
 
-# Exit upon first error.
+MD_DIR="../06_md"
+# Set up environment (Amber, Python, ...), exit upon error.
+if [ -f "${MD_DIR}/env_setup.sh" ]; then
+    source "${MD_DIR}/env_setup.sh"
+else
+    echo "file missing: ${MD_DIR}/env_setup.sh"
+    exit 1
+fi
+# Now, DMD_CODE_DIR is defined.
+source "${DMD_CODE_DIR}/common_code.sh"
 set -e
 
-err() {
-    # Print error message to stderr.
-    echo "ERROR >>> $@" 1>&2
-    }
-
-log() {
-    # Print message to stdout.
-    echo "INFO  >>> $@"
-    }
-
-PREFIX="../06_md"
 CRYSTAL_RECEPTOR_PDB="receptor.pdb"
 
 # Collect and rename final tMD states.
@@ -50,6 +35,7 @@ foreachpdb_align_receptor() {
     mkdir $ALIGNEDDIR
     mkdir $ALIGNEDDIR/outerr
     for PDB in ${PDBDIR}/*.pdb; do
+        [ -e "$PDB" ] || break # Credit: bash pitfalls.
         filename=$(basename "$PDB")
         extension="${filename##*.}"
         filenamewoext="${filename%.*}"
@@ -70,6 +56,7 @@ foreachpdb_extract_ligand() {
     mkdir $LIGANDDIR
     mkdir $LIGANDDIR/outerr
     for PDB in ${PDBDIR}/*.pdb; do
+        [ -e "$PDB" ] || break # Credit: bash pitfalls.
         filename=$(basename "$PDB")
         extension="${filename##*.}"
         filenamewoext="${filename%.*}"
@@ -81,7 +68,7 @@ foreachpdb_extract_ligand() {
     log "Waiting for PyMOL processes to finish..."
     wait
     log "Finished."
-}
+    }
 
 foreachpdb_align_receptor ${TMD_STATES_DIR}
 foreachpdb_extract_ligand ${TMD_STATES_DIR}_recaligned
