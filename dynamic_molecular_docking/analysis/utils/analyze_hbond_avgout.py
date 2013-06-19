@@ -44,7 +44,8 @@ def main():
         sys.exit("Already exists: %s" % output_dir)
 
     os.mkdir(output_dir)
-    logfilepath = os.path.join(output_dir, "%s.log" % sys.argv[0])
+    logfilepath = os.path.join(
+        output_dir, "%s.log" % os.path.basename(sys.argv[0]))
     fh = logging.FileHandler(logfilepath, encoding='utf-8')
     fh.setLevel(logging.DEBUG)
     log.addHandler(fh)
