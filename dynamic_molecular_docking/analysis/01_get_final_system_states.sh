@@ -16,17 +16,19 @@ set -e
 
 CRYSTAL_RECEPTOR_PDB="receptor.pdb"
 
+OUTDIR_PREFIX="system_state_pdb_files"
+
 # Collect and rename final tMD states.
-TMD_STATES_DIR="tmd_final_states"
+TMD_STATES_DIR="${OUTDIR_PREFIX}/tmd_final_states"
 rm -rf $TMD_STATES_DIR
-mkdir $TMD_STATES_DIR
-find $PREFIX -name "tmd_final_system_state.pdb" | utils/collect_pdb_files_with_run_id.py $TMD_STATES_DIR tmd_finalstate.pdb
+mkdir -p $TMD_STATES_DIR
+find $MD_DIR -name "tmd_final_system_state.pdb" | utils/collect_pdb_files_with_run_id.py $TMD_STATES_DIR tmd_finalstate.pdb
 
 # Collect and rename final free MD states.
-FREEMD_STATES_DIR="freemd_final_states_aftermin"
+FREEMD_STATES_DIR="${OUTDIR_PREFIX}/freemd_final_states_aftermin"
 rm -rf $FREEMD_STATES_DIR
 mkdir $FREEMD_STATES_DIR
-find $PREFIX -name "freemd_final_system_state_aftermin.pdb" | utils/collect_pdb_files_with_run_id.py $FREEMD_STATES_DIR freemd_finalstate_aftermin.pdb
+find $MD_DIR -name "freemd_final_system_state_aftermin.pdb" | utils/collect_pdb_files_with_run_id.py $FREEMD_STATES_DIR freemd_finalstate_aftermin.pdb
 
 foreachpdb_align_receptor() {
     PDBDIR="${1}"
