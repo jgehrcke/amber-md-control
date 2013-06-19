@@ -14,30 +14,33 @@ fi
 source "${DMD_CODE_DIR}/common_code.sh"
 set -e
 
-OUT_DIR_TOP="${PWD}/hbond_analysis"
-
-if [[ -d "$OUT_DIR_TOP" ]]; then
-    rm -rf "$OUT_DIR_TOP"
-    mkdir "$OUT_DIR_TOP"
-elif [[ -f "$OUT_DIR_TOP" ]]; then
-    err "$OUT_DIR_TOP unexpectedly exists as a file. Exit."
+OUT_DIR_MERGED_DATA="${PWD}/hbond_analysis"
+if [[ -d "$OUT_DIR_MERGED_DATA" ]]; then
+    rm -rf "$OUT_DIR_MERGED_DATA"
+    mkdir "$OUT_DIR_MERGED_DATA"
+elif [[ -f "$OUT_DIR_MERGED_DATA" ]]; then
+    err "$OUT_DIR_MERGED_DATA unexpectedly exists as a file. Exit."
     exit 1
+fi
+OUT_DIR_PER_RUN_DATA="per_run_data"
+if [[ ! -d "$OUT_DIR_PER_RUN_DATA" ]]; then
+    mkdir "$OUT_DIR_PER_RUN_DATA"
 fi
 
 LAST_N=250
 
 # Analyze cpptraj's hbond AVGOUT files.
 # During this analysis, hbond data among all DMD runs are merged.
-# This creates various output files in $OUT_DIR_TOP.
+# This creates various output files in $OUT_DIR_MERGED_DATA.
 log "Collecting cpptraj's AVGOUT files and merging data..."
-find "$MD_DIR" -name "hbonds_rec_lig_average_last_${LAST_N}.dat" | python utils/analyze_hbond_avgout.py "${OUT_DIR_TOP}/freemd_last${LAST_N}frames"
+find "$MD_DIR" -name "hbonds_rec_lig_average_last_${LAST_N}.dat" | python utils/analyze_hbond_avgout.py "${OUT_DIR_MERGED_DATA}/freemd_last${LAST_N}frames"
 
 # Analyze cpptraj's hbond OUT files.
 # Creates measures for each DMD run.
 # For each free MD simulation, the H-bond count with receptor being H-bond donor
 # is averaged over the last N frames of the simulation.
 analyze_last_n_frames() {
-    OUTFILE="hbonds_freemd_avg_number_last${LAST_N}frames.dat"
+    OUTFILE="${OUT_DIR_PER_RUN_DATA}/hbonds_freemd_avg_number_last${LAST_N}frames.dat"
     log "Creating $OUTFILE ..."
     # Overwrite file
     echo "run_id,hbonds_freemd_avg_number_last250frames_mean,hbonds_freemd_avg_number_last250frames_stddev" > "$OUTFILE"
@@ -56,7 +59,7 @@ analyze_last_n_frames() {
 analyze_last_n_frames &
 
 analyze_entire_trajectory() {
-    OUTFILE="hbonds_freemd_avg_number_entiretraj.dat"
+    OUTFILE="${OUT_DIR_PER_RUN_DATA}/hbonds_freemd_avg_number_entiretraj.dat"
     log "Creating $OUTFILE ..."
     # Overwrite file
     echo "run_id,hbonds_freemd_avg_number_entiretraj_mean,hbonds_freemd_avg_number_entiretraj_stddev" > "$OUTFILE"

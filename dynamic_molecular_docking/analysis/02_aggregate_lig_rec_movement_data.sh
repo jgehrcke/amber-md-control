@@ -4,7 +4,7 @@
 
 MD_DIR="../06_md"
 # Set up environment (Amber, Python, ...), exit upon error.
-if [ -f "${MD_DIR}/env_setup.sh" ]; then
+if [[ -f "${MD_DIR}/env_setup.sh" ]]; then
     source "${MD_DIR}/env_setup.sh"
 else
     echo "file missing: ${MD_DIR}/env_setup.sh"
@@ -13,13 +13,16 @@ fi
 # Now, DMD_CODE_DIR is defined.
 source "${DMD_CODE_DIR}/common_code.sh"
 set -e
+OUT_DIR_PER_RUN_DATA="per_run_data"
+if [[ ! -d "$OUT_DIR_PER_RUN_DATA" ]]; then
+    mkdir "$OUT_DIR_PER_RUN_DATA"
+fi
 
 # Run the functions below asynchronously.
-
 mov_freemd_lastNframes_ligrecrelmov() {
     LAST_N=$1
     PROJECT="mov_freemd_last${LAST_N}frames_ligrecrelmov"
-    OUTFILE="${PROJECT}.dat"
+    OUTFILE="${OUT_DIR_PER_RUN_DATA}/${PROJECT}.dat"
     log "Working on project ${PROJECT} ..."
     # Overwrite file
     echo "run_id,${PROJECT}_mean,${PROJECT}_stddev" > $OUTFILE
@@ -40,7 +43,7 @@ mov_freemd_lastNframes_ligrecrelmov 250 &
 
 mov_freemd_entire_ligrecrelmov() {
     PROJECT="mov_freemd_entire_ligrecrelmov"
-    OUTFILE="${PROJECT}.dat"
+    OUTFILE="${OUT_DIR_PER_RUN_DATA}/${PROJECT}.dat"
     log "Working on project ${PROJECT} ..."
     # Overwrite file
     echo "run_id,${PROJECT}_mean,${PROJECT}_stddev" > $OUTFILE
@@ -62,7 +65,7 @@ mov_freemd_entire_ligrecrelmov &
 mov_freemd_lastNframes_liginternal() {
     LAST_N=$1
     PROJECT="mov_freemd_last${LAST_N}frames_liginternal"
-    OUTFILE="${PROJECT}.dat"
+    OUTFILE="${OUT_DIR_PER_RUN_DATA}/${PROJECT}.dat"
     log "Working on project ${PROJECT} ..."
     # Overwrite file
     echo "run_id,${PROJECT}_mean,${PROJECT}_stddev" > $OUTFILE
@@ -83,7 +86,7 @@ mov_freemd_lastNframes_liginternal 250 &
 
 mov_freemd_entire_liginternal() {
     PROJECT="mov_freemd_entire_liginternal"
-    OUTFILE="${PROJECT}.dat"
+    OUTFILE="${OUT_DIR_PER_RUN_DATA}/${PROJECT}.dat"
     log "Working on project ${PROJECT} ..."
     # Overwrite file
     echo "run_id,${PROJECT}_mean,${PROJECT}_stddev" > $OUTFILE

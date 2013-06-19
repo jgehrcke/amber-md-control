@@ -4,7 +4,7 @@
 
 MD_DIR="../06_md"
 # Set up environment (Amber, Python, ...), exit upon error.
-if [ -f "${MD_DIR}/env_setup.sh" ]; then
+if [[ -f "${MD_DIR}/env_setup.sh" ]]; then
     source "${MD_DIR}/env_setup.sh"
 else
     echo "file missing: ${MD_DIR}/env_setup.sh"
@@ -13,6 +13,10 @@ fi
 # Now, DMD_CODE_DIR is defined.
 source "${DMD_CODE_DIR}/common_code.sh"
 set -e
+OUT_DIR_PER_RUN_DATA="per_run_data"
+if [[ ! -d "$OUT_DIR_PER_RUN_DATA" ]]; then
+    mkdir "$OUT_DIR_PER_RUN_DATA"
+fi
 
 check_required "${MD_DIR}/ligand_residues"
 check_required "${MD_DIR}/receptor_residues"
@@ -21,7 +25,7 @@ RECEPTOR_RESIDUES=$(cat "${MD_DIR}/receptor_residues")
 STARTDIR=$(pwd)
 
 # Define filename for data file to be created in analysis directory.
-OUTFILE="lig_rec_distances_after_freemd.dat"
+OUTFILE="${OUT_DIR_PER_RUN_DATA}/lig_rec_distances_after_freemd.dat"
 
 # Define filename for data file to be created in every single free MD dir,
 # containing only the numerical value of the minimal distance in Angstrom.

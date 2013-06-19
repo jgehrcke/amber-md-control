@@ -4,7 +4,7 @@
 
 MD_DIR="../06_md"
 # Set up environment (Amber, Python, ...), exit upon error.
-if [ -f "${MD_DIR}/env_setup.sh" ]; then
+if [[ -f "${MD_DIR}/env_setup.sh" ]]; then
     source "${MD_DIR}/env_setup.sh"
 else
     echo "file missing: ${MD_DIR}/env_setup.sh"
@@ -13,9 +13,13 @@ fi
 # Now, DMD_CODE_DIR is defined.
 source "${DMD_CODE_DIR}/common_code.sh"
 set -e
+OUT_DIR_PER_RUN_DATA="per_run_data"
+if [[ ! -d "$OUT_DIR_PER_RUN_DATA" ]]; then
+    mkdir "$OUT_DIR_PER_RUN_DATA"
+fi
 
 LAST_N=250
-OUTFILE="mmpbsa_freemd_last${LAST_N}frames.dat"
+OUTFILE="${OUT_DIR_PER_RUN_DATA}/mmpbsa_freemd_last${LAST_N}frames.dat"
 log "Creating $OUTFILE ..."
 # Write column headers to output file (overwrite existing file)
 echo "run_id,mmpbsa_freemdlast${LAST_N}frames_deltag,mmpbsa_freemdlast${LAST_N}frames_deltag_stddev,mmpbsa_freemdlast${LAST_N}frames_deltaeel,mmpbsa_freemdlast${LAST_N}frames_deltaeel_stddev" > $OUTFILE
