@@ -15,6 +15,7 @@ source "${DMD_CODE_DIR}/common_code.sh"
 set -e
 
 CRYSTAL_RECEPTOR_PDB="receptor.pdb"
+check_required "$CRYSTAL_RECEPTOR_PDB"
 
 OUTDIR_PREFIX="system_state_pdb_files"
 
