@@ -1,57 +1,23 @@
 #!/bin/bash
-#   Copyright 2012-2013 Jan-Philip Gehrcke
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
+# Copyright 2012-2013 Jan-Philip Gehrcke, http://gehrcke.de
 
 # To be executed in ligand directory.
-# Set up environment (Amber, Python, ...).
-if [ -f "../env_setup.sh" ]; then
-    source "../env_setup.sh"
+# Set up environment (Amber, Python, ...), exit upon error.
+ENV_SETUP_PATH="../env_setup.sh"
+if [ -f "$ENV_SETUP_PATH" ]; then
+    source "$ENV_SETUP_PATH"
+else
+    echo "file missing: $ENV_SETUP_PATH"
+    exit 1
 fi
+# Now, DMD_CODE_DIR is defined.
+source "${DMD_CODE_DIR}/common_code.sh"
 
 # Define MD timings. Boundary condition: MD time step of 2 fs.
 # Default within DMD run: 20 ps for heatup (0.02 ns).
 HEATUP_TIME_NS="0.02"
 # Default within DMD run: 1 ns for equilibration.
 EQUI_TIME_NS="1"
-
-
-err() {
-    # Print error message to stderr.
-    echo "$@" 1>&2;
-    }
-
-check_delete () {
-    # Delete file if existing.
-    if [ -f "${1}" ]; then
-        echo "Deleting ${1} ..."
-        rm -f "${1}"
-    fi
-    }
-
-check_required_file () {
-    # Check if file is available, exit if not.
-    if [ ! -f "${1}" ]; then
-       err "File ${1} is required and does not exist. Exit."
-       exit 1
-    fi
-    }
-
-print_run_command () {
-    echo "Running command:"
-    echo "${1}"
-    eval "${1}"
-    }
 
 # Check number of given arguments:
 if [ $# -le 2 ]; then
@@ -63,17 +29,13 @@ if [ $# -le 2 ]; then
     exit 1
 fi
 
+# Temporarily deactive unset option.
+set +u
 PRMTOP="$1"
 INITCRD="$2"
 NCPUS="$3"
 GPUID="$4"
-
-test_number() {
-    if ! [[ "${1}" =~ ^[0-9]+$ ]] ; then
-        err "Not a number: '${1}'. Exit."
-        exit 1
-    fi
-    }
+set -u
 
 # The third argument must in any case be a number.
 test_number "${NCPUS}"

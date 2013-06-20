@@ -1,13 +1,15 @@
 #!/bin/bash
 # Copyright 2012-2013 Jan-Philip Gehrcke, http://gehrcke.de
 
-# To be executed in free MD directory.
-
 # To be executed in free MD dir.
 
 # Set up environment (Amber, Python, ...), exit upon error.
-if [ -f "../../../env_setup.sh" ]; then
-    source "../../../env_setup.sh"
+ENV_SETUP_PATH="../../../env_setup.sh"
+if [ -f "$ENV_SETUP_PATH" ]; then
+    source "$ENV_SETUP_PATH"
+else
+    echo "file missing: $ENV_SETUP_PATH"
+    exit 1
 fi
 # Now, DMD_CODE_DIR is defined.
 source "${DMD_CODE_DIR}/common_code.sh"
@@ -33,10 +35,15 @@ if [ $# -le 2 ]; then
     exit 1
 fi
 
+# Option nounset is active here, which throws an error when expanding
+# 'empty' commandline arguments. Either use e.g. "${4-}" or temporarily
+# deactive nounset option.
+set +u
 PRMTOP="$1"
 INITCRD="$2"
 NCPUS="$3"
 GPUID="$4"
+set -u
 
 # The third argument must in any case be a number.
 test_number "${NCPUS}"

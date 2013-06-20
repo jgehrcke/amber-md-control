@@ -1,23 +1,18 @@
 #!/bin/bash
-#   Copyright 2012-2013 Jan-Philip Gehrcke
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
+# Copyright 2012-2013 Jan-Philip Gehrcke, http://gehrcke.de
 
 # To be executed in ligand directory.
-# Set up environment (Amber, Python, ...).
-if [ -f "../env_setup.sh" ]; then
-    source "../env_setup.sh"
+# Set up environment (Amber, Python, ...), exit upon error.
+ENV_SETUP_PATH="../env_setup.sh"
+if [ -f "$ENV_SETUP_PATH" ]; then
+    source "$ENV_SETUP_PATH"
+else
+    echo "file missing: $ENV_SETUP_PATH"
+    exit 1
 fi
+# Now, DMD_CODE_DIR is defined.
+source "${DMD_CODE_DIR}/common_code.sh"
+
 
 EQUI_RESTART_FILE="equilibrate_NPT.rst"
 TMD_RESTRAINT_FILE="dmd_tmd.rest"
@@ -27,41 +22,6 @@ PRODINFILE="${PRODPREFIX}.in"
 # Define MD duration in ns. Boundary condition: MD time step of 2 fs.
 TMD_TIME_NS="3"
 TMD_TIME_STEPS=$(python -c "print int(${TMD_TIME_NS}*1000000*0.5)")
-
-err() {
-    # Print error message to stderr.
-    echo "$@" 1>&2;
-    }
-
-print_run_command () {
-    echo "Running command:"
-    echo "${1}"
-    eval "${1}"
-    }
-
-# Test validity of arguments.
-test_number() {
-    if ! [[ "${1}" =~ ^[0-9]+$ ]] ; then
-        err "Not a number: '${1}'. Exit."
-        exit 1
-    fi
-    }
-
-# Check if all required files are available.
-check_required () {
-    if [ ! -f $1 ]; then
-       err "File $1 is required and does not exist. exit."
-       exit 1
-    fi
-    }
-
-# Check if path is directly in current dir, i.e. does not contain slash
-check_in_this_dir () {
-    if [[ "${1}" == */* ]]; then
-        err "${1} must not contain slashes."
-        exit 1
-    fi
-}
 
 # Check number of arguments, define help message.
 SCRIPTNAME="$(basename "$0")"
@@ -73,9 +33,13 @@ if [ $# -lt 2 ]; then
     err "arg 3: the GPU ID to use (optional) or the number of CPUs to use (required)."
     exit 1
 fi
+
+# Temporarily deactive unset option.
+set +u
 OUTDIR="$1"
 GPUCPU="$2"
 NUMBER="$3"
+set -u
 
 if [ -z "$NUMBER" ]; then
     GPUID="none"
