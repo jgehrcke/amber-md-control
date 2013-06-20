@@ -95,9 +95,6 @@ EQUIINFILE="${EQUIPREFIX}.in"
 PRODPREFIX="production_NVT"
 PRODINFILE="${PRODPREFIX}.in"
 
-echo "Sourcing $AMBER_SETUP"
-source "${AMBER_SETUP}"
-
 echo "heatup duration: ${HEATUP_TIME_NS} ns, time steps: ${HEATUP_TIME_STEPS}"
 echo "equi duration: ${EQUI_TIME_NS} ns, time steps: ${EQUI_TIME_STEPS}"
 echo "prod duration: ${PROD_TIME_NS} ns, time steps: ${PROD_TIME_STEPS}"
