@@ -19,6 +19,8 @@ HEATUP_TIME_NS="0.02"
 # Default within DMD run: 1 ns for equilibration.
 EQUI_TIME_NS="1"
 
+# Check number of arguments, define help message.
+SCRIPTNAME="$(basename "$0")"
 # Check number of given arguments:
 if [ $# -le 2 ]; then
     err "Usage: ${SCRIPTNAME} prmtopfile coordfile n_cpus [gpu_id]"
