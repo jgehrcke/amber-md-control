@@ -89,8 +89,8 @@ EQUIINFILE="${EQUIPREFIX}.in"
 
 
 # Check for existance of DMD-related files.
-check_required_file core_atom_id
-check_required_file ligand_center_atom_id
+check_required core_atom_id
+check_required ligand_center_atom_id
 CORE_ATOM_ID=$(cat core_atom_id)
 LIGAND_CENTER_ATOM_ID=$(cat ligand_center_atom_id)
 
