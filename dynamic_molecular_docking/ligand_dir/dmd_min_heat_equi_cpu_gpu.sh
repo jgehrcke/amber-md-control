@@ -15,7 +15,7 @@ source "${DMD_CODE_DIR}/common_code.sh"
 
 # Define MD timings. Boundary condition: MD time step of 2 fs.
 # Default within DMD run: 20 ps for heatup (0.02 ns).
-HEATUP_TIME_NS="0.02"
+HEATUP_TIME_NS="0.05"
 # Default within DMD run: 1 ns for equilibration.
 EQUI_TIME_NS="0.5"
 
