@@ -17,7 +17,7 @@ source "${DMD_CODE_DIR}/common_code.sh"
 # Default within DMD run: 20 ps for heatup (0.02 ns).
 HEATUP_TIME_NS="0.02"
 # Default within DMD run: 1 ns for equilibration.
-EQUI_TIME_NS="1"
+EQUI_TIME_NS="0.5"
 
 # Check number of arguments, define help message.
 SCRIPTNAME="$(basename "$0")"
