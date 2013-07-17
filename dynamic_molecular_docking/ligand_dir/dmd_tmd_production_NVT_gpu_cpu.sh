@@ -14,6 +14,8 @@ fi
 source "${DMD_CODE_DIR}/common_code.sh"
 
 
+
+
 EQUI_RESTART_FILE="equilibrate_NPT.rst"
 TMD_RESTRAINT_FILE="dmd_tmd.rest"
 TOPOLOGYFILE="top.prmtop"
@@ -80,6 +82,10 @@ echo "Hostname: $(hostname)"
 echo "Current working directory: $(pwd)"
 if [ ${PBS_JOBID+x} ]; then
     echo "PBS_JOBID is set ('${PBS_JOBID}')"
+fi
+
+if [ ! -f ${TMD_RESTRAINT_FILE} ]; then
+    /bin/bash read_distance_create_rest_file.sh
 fi
 
 check_required ${TMD_RESTRAINT_FILE}
