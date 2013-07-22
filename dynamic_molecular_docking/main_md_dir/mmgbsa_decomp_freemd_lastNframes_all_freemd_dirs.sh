@@ -5,7 +5,8 @@
 STARTDIR="$PWD"
 SCRIPT_TO_EXECUTE="./mmgbsa_decomp_freemd_lastNframes.sh"
 ABSPATH_TO_SCRIPT=$(readlink -f ${SCRIPT_TO_EXECUTE})
-NBR_CPUS=$1
+NBR_CPUS="$1"
+BATCH_SYSTEM="$2"
 
 if [[ ! -x "$SCRIPT_TO_EXECUTE" ]]; then
     echo "Does not exist or not executable: $SCRIPT_TO_EXECUTE"
