@@ -18,9 +18,13 @@ OUT_DIR_MERGED_DATA="${PWD}/hbond_analysis"
 if [[ -d "$OUT_DIR_MERGED_DATA" ]]; then
     rm -rf "$OUT_DIR_MERGED_DATA"
     mkdir "$OUT_DIR_MERGED_DATA"
+    echo "Output directory $OUT_DIR_MERGED_DATA removed and re-created."
 elif [[ -f "$OUT_DIR_MERGED_DATA" ]]; then
     err "$OUT_DIR_MERGED_DATA unexpectedly exists as a file. Exit."
     exit 1
+else
+    mkdir "$OUT_DIR_MERGED_DATA"
+    echo "Output directory $OUT_DIR_MERGED_DATA created."
 fi
 OUT_DIR_PER_RUN_DATA="per_run_data"
 if [[ ! -d "$OUT_DIR_PER_RUN_DATA" ]]; then
