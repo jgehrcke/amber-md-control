@@ -32,6 +32,13 @@ if [ $# != 1 ]; then
 fi
 
 CPUNUMBER="$1"
+
+# Sun Grid Engine sets NSLOTS.
+if [ ! -z "$NSLOTS" ]; then
+    echo "NSLOTS set to $NSLOTS. Overriding CPUNUMBER."
+    CPUNUMBER="$NSLOTS"
+fi
+
 if ! [[ "${CPUNUMBER}" =~ ^[0-9]+$ ]] ; then
    err "Not a number: ${CPUNUMBER}. Exit."
    exit 1
