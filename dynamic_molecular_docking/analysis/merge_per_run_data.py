@@ -27,7 +27,7 @@ def main():
 
     outfile_path = "per_run_data_merged.dat"
     log.info("Writing output file '%s'." % outfile_path)
-    merged_dataframe.to_csv(outfile_path)
+    merged_dataframe.to_csv(outfile_path, index_label='run_id')
 
 
 if __name__ == "__main__":
