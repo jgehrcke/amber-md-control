@@ -47,3 +47,11 @@ test_number() {
         exit 1
     fi
     }
+
+check_command () {
+    command -v "${1}"
+    if [ $? -ne 0 ]; then
+        err "Command '${1}' not found. Exit."
+        exit 1
+    fi
+    }

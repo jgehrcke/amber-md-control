@@ -18,23 +18,17 @@
 FREEMDDIR="freemd"
 FREEMD_REQUIRED_FILES_DIR="freemd_required_files"
 
-# Set up environment (Amber, Python, ...).
-if [ -f "./env_setup.sh" ]; then
-    source "./env_setup.sh"
+MD_DIR="."
+# Set up environment (Amber, Python, ...), exit upon error.
+if [[ -f "${MD_DIR}/env_setup.sh" ]]; then
+    source "${MD_DIR}/env_setup.sh"
+else
+    echo "file missing: ${MD_DIR}/env_setup.sh"
+    exit 1
 fi
-
+# Now, DMD_CODE_DIR is defined.
+source "${DMD_CODE_DIR}/common_code.sh"
 set -e
-
-err() {
-    # Print error message to stderr.
-    echo "ERROR >>> $@" 1>&2
-    }
-
-log() {
-    # Print message to stdout.
-    echo "INFO  >>> $@"
-    }
-
 
 if [ ! -d "${FREEMD_REQUIRED_FILES_DIR}" ]; then
     err "${FREEMD_REQUIRED_FILES_DIR} does not exist. Exit."
