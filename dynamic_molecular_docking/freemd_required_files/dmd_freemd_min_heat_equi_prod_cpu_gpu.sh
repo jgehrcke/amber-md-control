@@ -73,11 +73,6 @@ else
     else
         test_number "${GPUID}"
     fi
-
-    if [[ "${NCPUS}" == "gpu" ]]; then
-        # Use GPU engine also for first minimization.
-        MINENGINE="${GPUENGINE}"
-    fi
 fi
 
 
