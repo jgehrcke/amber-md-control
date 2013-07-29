@@ -30,7 +30,7 @@ if [ $# -le 2 ]; then
     err "Usage: ${SCRIPTNAME} prmtopfile coordfile n_cpus [gpu_id]"
     err "1st argument: the prmtop file of the system to minimize."
     err "2nd argument: the initial coord file of the system to minimize."
-    err "3rd argument: the number of CPUs to use (for minimization in case of GPU)."
+    err "3rd argument: the number of CPUs to use (for first minimization) or or 'gpu' (runs minimization also on GPU)."
     err "4th argument: GPU ID (optional in case of GPU) or 'cpu' (runs all steps on CPU)."
     exit 1
 fi
@@ -45,25 +45,52 @@ NCPUS="$3"
 GPUID="$4"
 set -u
 
-# The third argument must in any case be a number.
-test_number "${NCPUS}"
+if [[ "${NCPUS}" != "gpu" ]]; then
+    # The third argument must in any case be a number.
+    test_number "${NCPUS}"
+    CPUENGINE="mpirun -np ${NCPUS} pmemd.MPI"
+    # Run first minimization on CPU by default.
+    MINENGINE="${CPUENGINE}"
+fi
 
-# ENGINE can bei either GPU or CPU engine. Set default here.
-ENGINE="pmemd.cuda"
-CPUENGINE="mpirun -np ${NCPUS} pmemd.MPI"
+GPUENGINE="pmemd.cuda"
+
+# Set default engine to GPU engine.
+ENGINE="${GPUENGINE}"
 
 # GPUID is either not set (default GPU), a number (use *that* GPU) or 'cpu'.
 if [ -z "$GPUID" ]; then
     GPUID="none"
 else
     if [[ "${GPUID}" == "cpu" ]]; then
+        if [[ "${NCPUS}" == "gpu" ]]; then
+            err "gpu/cpu option collision."
+            exit 1
+        fi
         # Use CPU engine as default engine, mark GPUID as being useless.
         ENGINE="${CPUENGINE}"
         GPUID="none"
     else
         test_number "${GPUID}"
     fi
+
+    if [[ "${NCPUS}" == "gpu" ]]; then
+        # Use GPU engine also for first minimization.
+        MINENGINE="${GPUENGINE}"
+    fi
 fi
+
+
+# NCPUs is either a number or 'gpu'.
+if [[ "${NCPUS}" == "gpu" ]]; then
+    # Use GPU engine also for first minimization.
+    MINENGINE="${GPUENGINE}"
+fi
+
+log "Default engine: $ENGINE"
+log "First minimization engine: $MINENGINE"
+log "debug: NCPUS: $NCPUS"
+log "debug: GPUID: $GPUID"
 
 # Useful debug output.
 echo "Hostname: $(hostname)"
@@ -176,7 +203,7 @@ cat ${MIN2FILE}
 
 
 echo "Running first minimization (fixed solute)..."
-CMD="time ${CPUENGINE} -O -i ${MIN1FILE} -o ${MIN1PREFIX}.out -p ${PRMTOP} \
+CMD="time ${MINENGINE} -O -i ${MIN1FILE} -o ${MIN1PREFIX}.out -p ${PRMTOP} \
      -c ${INITCRD} -r ${MIN1PREFIX}.rst -ref ${INITCRD}"
 print_run_command "${CMD}"
 if [ $? != 0 ]; then
