@@ -15,23 +15,26 @@ source "${DMD_CODE_DIR}/common_code.sh"
 
 # Define MD timings. Boundary condition: MD time step of 2 fs.
 # Default within DMD run: 20 ps for heatup (0.02 ns).
-HEATUP_TIME_NS="0.05"
+HEATUP_TIME_NS="0.1"
 # Default within DMD run: 1 ns for equilibration.
 EQUI_TIME_NS="0.5"
 
 # Check number of arguments, define help message.
 SCRIPTNAME="$(basename "$0")"
+
 # Check number of given arguments:
 if [ $# -le 2 ]; then
     err "Usage: ${SCRIPTNAME} prmtopfile coordfile n_cpus [gpu_id]"
     err "1st argument: the prmtop file of the system to minimize."
     err "2nd argument: the initial coord file of the system to minimize."
-    err "3rd argument: the number of CPUs to use (for minimization in case of GPU)."
-    err "4th argument: GPU ID (optional in case of GPU) or 'cpu' (runs all steps on CPU)"
+    err "3rd argument: the number of CPUs to use (for first minimization) or or 'gpu' (runs minimization also on GPU)."
+    err "4th argument: GPU ID (optional in case of GPU) or 'cpu' (runs all steps on CPU)."
     exit 1
 fi
 
-# Temporarily deactive unset option.
+# Option nounset is active here, which throws an error when expanding
+# 'empty' commandline arguments. Either use e.g. "${4-}" or temporarily
+# deactive nounset option.
 set +u
 PRMTOP="$1"
 INITCRD="$2"
@@ -39,25 +42,43 @@ NCPUS="$3"
 GPUID="$4"
 set -u
 
-# The third argument must in any case be a number.
-test_number "${NCPUS}"
+if [[ "${NCPUS}" != "gpu" ]]; then
+    # The third argument must in any case be a number.
+    test_number "${NCPUS}"
+    CPUENGINE="mpirun -np ${NCPUS} pmemd.MPI"
+    # Run first minimization on CPU by default.
+    MINENGINE="${CPUENGINE}"
+fi
 
-# ENGINE can bei either GPU or CPU engine. Set default here.
-ENGINE="pmemd.cuda"
-CPUENGINE="mpirun -np ${NCPUS} pmemd.MPI"
+GPUENGINE="pmemd.cuda"
+
+# Set default engine to GPU engine.
+ENGINE="${GPUENGINE}"
 
 # GPUID is either not set (default GPU), a number (use *that* GPU) or 'cpu'.
 if [ -z "$GPUID" ]; then
     GPUID="none"
 else
     if [[ "${GPUID}" == "cpu" ]]; then
+        if [[ "${NCPUS}" == "gpu" ]]; then
+            err "gpu/cpu option collision."
+            exit 1
+        fi
         # Use CPU engine as default engine, mark GPUID as being useless.
-        ENGINE="$CPUENGINE"
+        ENGINE="${CPUENGINE}"
         GPUID="none"
     else
-        test_number "$GPUID"
+        test_number "${GPUID}"
     fi
 fi
+
+
+# NCPUs is either a number or 'gpu'.
+if [[ "${NCPUS}" == "gpu" ]]; then
+    # Use GPU engine also for first minimization.
+    MINENGINE="${GPUENGINE}"
+fi
+
 
 # Useful debug output.
 echo "Hostname: $(hostname)"
