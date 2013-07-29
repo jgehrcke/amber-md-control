@@ -234,7 +234,7 @@ echo "Minimization finished."
 # ============================================================================
 echo
 echo ">>> HEATUP"
-check_required_file ${MIN2PREFIX}.rst
+check_required ${MIN2PREFIX}.rst
 check_delete ${HEATINFILE}
 echo "Writing input file ${HEATINFILE} ..."
 echo "
