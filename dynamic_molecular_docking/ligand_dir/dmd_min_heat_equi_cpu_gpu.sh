@@ -204,7 +204,7 @@ cat ${MIN2FILE}
 # which should better be handled by full double precision calculation).
 
 echo "Running first minimization (fixed solute)..."
-CMD="time ${CPUENGINE} -O -i ${MIN1FILE} -o ${MIN1PREFIX}.out -p ${PRMTOP} \
+CMD="time ${MINENGINE} -O -i ${MIN1FILE} -o ${MIN1PREFIX}.out -p ${PRMTOP} \
      -c ${INITCRD} -r ${MIN1PREFIX}.rst -ref ${INITCRD}"
 print_run_command "${CMD}"
 if [ $? != 0 ]; then
