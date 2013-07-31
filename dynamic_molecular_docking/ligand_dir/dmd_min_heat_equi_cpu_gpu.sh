@@ -40,15 +40,21 @@ PRMTOP="$1"
 INITCRD="$2"
 NCPUS="$3"
 GPUID="$4"
-set -u
 
 if [[ "${NCPUS}" != "gpu" ]]; then
     # The third argument must in any case be a number.
+
+    # Sun Grid Engine sets NSLOTS.
+    if [ ! -z "$NSLOTS" ]; then
+        echo "NSLOTS set to $NSLOTS. Overriding NCPUS."
+        NCPUS="$NSLOTS"
+    fi
     test_number "${NCPUS}"
     CPUENGINE="mpirun -np ${NCPUS} pmemd.MPI"
     # Run first minimization on CPU by default.
     MINENGINE="${CPUENGINE}"
 fi
+set -u
 
 GPUENGINE="pmemd.cuda"
 
