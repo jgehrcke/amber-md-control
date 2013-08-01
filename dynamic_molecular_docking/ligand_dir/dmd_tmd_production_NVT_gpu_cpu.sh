@@ -84,9 +84,29 @@ if [ ${PBS_JOBID+x} ]; then
     echo "PBS_JOBID is set ('${PBS_JOBID}')"
 fi
 
-if [ ! -f ${TMD_RESTRAINT_FILE} ]; then
-    /bin/bash read_distance_create_rest_file.sh
-fi
+
+# From flock(1):
+# By default, if the lock cannot be immediately acquired, flock waits
+# until the lock is available. 
+
+# Obtain exclusive lock on file descriptor 200.
+(
+    flock -x 200
+    if [ ! -f ${TMD_RESTRAINT_FILE} ]; then
+        /bin/bash read_distance_create_rest_file.sh
+    fi
+) 200>"create_restraint_file.lock"
+rm create_restraint_file.lock
+
+# The above construct executes ( ... ) in a subshell in a child process.
+# The redirection is created first, i.e. the lock file is created first
+# and then the subshell is invoked. `flock -x` waits until lock can be 
+# acquired. The first process/job acquiring the lock will not find the
+# restraints file. It will call the read_distance_create_rest_file.sh
+# script. While this script runs, the lock is kept acquired and all other
+# jobs/processes wait on the `flock -x 200` line. In the moment the
+# lock becomes released, the restraint file exists and all processes
+# continue synchronized.
 
 check_required ${TMD_RESTRAINT_FILE}
 check_required ${EQUI_RESTART_FILE}
