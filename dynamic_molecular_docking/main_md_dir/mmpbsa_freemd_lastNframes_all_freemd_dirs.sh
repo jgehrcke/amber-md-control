@@ -58,8 +58,11 @@ do
         echo "Not implemented for LSF. Exit."
         exit 1
     elif [[ "$BATCH_SYSTEM" == "slurm" ]]; then
-        echo "Not implemented for Slurm. Exit."
-        exit 1
+        #echo "Not implemented for Slurm. Exit."
+        sbatch --ntasks $NBR_CPUS --partition all --mem-per-cpu 2000 --time 1:30:00 \
+            --output 'slurm_mmpbsa_%j.outerr' \
+            --error 'slurm_mmpbsa_%j.outerr' \
+            ${ABSPATH_TO_SCRIPT} $NBR_CPUS            
     else
         ${ABSPATH_TO_SCRIPT} "$NBR_CPUS" 1> /dev/null < /dev/null
     fi
