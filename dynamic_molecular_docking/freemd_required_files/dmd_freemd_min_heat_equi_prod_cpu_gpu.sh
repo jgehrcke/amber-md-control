@@ -117,6 +117,29 @@ EQUIINFILE="${EQUIPREFIX}.in"
 PRODPREFIX="production_NVT"
 PRODINFILE="${PRODPREFIX}.in"
 
+
+# In case of free MD production, an unwanted overwrite is uncool.
+# Also, multiple jobs working on the same should be prevented.
+# Implement some mechanisms against this.
+
+PROD_OUTFILE="${PRODPREFIX}.out"
+if [ -r ${PROD_OUTFILE} ]; then
+    OUTFILE_FINISH=$(tail ${PROD_OUTFILE} -n 1 | grep "wall time")
+    if [ ! -z "${OUTFILE_FINISH}" ]; then
+        err "${PWD}: ${PROD_OUTFILE} with time stats at the end."
+        err " -> free MD in this directory already finished. Exit."
+        exit
+    fi
+fi
+# http://mywiki.wooledge.org/BashFAQ/045
+exec 200> _lockfile
+    if ! flock -n 200 ; then
+        echo "Could not acquire lock. Another instance is running here. Exit.";
+        exit
+    fi
+# This now runs under the lock until 200 is closed (it 
+# will be closed automatically when the script ends).
+
 echo "heatup duration: ${HEATUP_TIME_NS} ns, time steps: ${HEATUP_TIME_STEPS}"
 echo "equi duration: ${EQUI_TIME_NS} ns, time steps: ${EQUI_TIME_STEPS}"
 echo "prod duration: ${PROD_TIME_NS} ns, time steps: ${PROD_TIME_STEPS}"
@@ -135,7 +158,6 @@ else
     NMRREST=""
     NMROPT="0"
 fi
-
 
 # MINIMIZATION
 # ============================================================================
