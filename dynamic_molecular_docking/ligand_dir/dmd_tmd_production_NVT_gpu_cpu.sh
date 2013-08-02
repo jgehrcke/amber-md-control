@@ -48,6 +48,7 @@ if [ -z "$NUMBER" ]; then
     CPUNUMBER="none"
 else
     test_number "${NUMBER}"
+    CPUNUMBER=${NUMBER}
 fi
 
 if [[ "${GPUCPU}" == "gpu" ]]; then
@@ -70,7 +71,6 @@ elif [[ "${GPUCPU}" == "cpu" ]]; then
         err "When using option 'cpu', the number of CPUs must be provided."
         exit 1
     fi
-    CPUNUMBER="${NUMBER}"
     ENGINE="mpirun -np ${CPUNUMBER} pmemd.MPI"
 else
     err "Argument must bei either 'gpu' or 'cpu'. Exit."
