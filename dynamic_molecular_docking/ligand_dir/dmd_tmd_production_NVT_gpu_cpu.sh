@@ -91,12 +91,14 @@ fi
 
 # Obtain exclusive lock on file descriptor 200.
 (
+    echo "Trying to acquire lock... ($(date))"
     flock -x 200
+    echo "Lock acquired ($(date))."
     if [ ! -f ${TMD_RESTRAINT_FILE} ]; then
         /bin/bash read_distance_create_rest_file.sh
     fi
 ) 200>"create_restraint_file.lock"
-rm create_restraint_file.lock
+rm -f create_restraint_file.lock
 
 # The above construct executes ( ... ) in a subshell in a child process.
 # The redirection is created first, i.e. the lock file is created first

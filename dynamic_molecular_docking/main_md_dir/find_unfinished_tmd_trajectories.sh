@@ -74,7 +74,7 @@ for LIGDIR in ligand_*; do
         FRAMECOUNTACTUAL=$(netcdftraj_framecount -p ${PRMTOP} -n ${TRAJFILE})
         if [ $? != 0 ]; then
             err "$(pwd): netcdftraj_framecount returned with error."
-            cd ..; cd ..; exit
+            cd ..; cd ..; #exit
         fi
         log "${FRAMECOUNTACTUAL} frames."
         cd ..;
