@@ -111,10 +111,6 @@ rm create_restraint_file.lock
 check_required ${TMD_RESTRAINT_FILE}
 check_required ${EQUI_RESTART_FILE}
 check_required ${TOPOLOGYFILE}
-check_in_this_dir ${TMD_RESTRAINT_FILE}
-check_in_this_dir ${EQUI_RESTART_FILE}
-check_in_this_dir ${TOPOLOGYFILE}
-check_in_this_dir ${OUTDIR}
 
 if [ -d ${OUTDIR} ]; then
     echo "Output directory '${OUTDIR}' already exists. Exit."
