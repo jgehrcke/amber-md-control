@@ -12,8 +12,7 @@ path_restraint_file_tmd_common = 'link_to_each_ligand_dir/dmd_tmd_common.rest'
 try:
     path_to_solv_complex_pdb_file = sys.argv[1]
 except IndexError:
-    print "Required first argument: path to PDB file containing solvated complex as written by leap."
-
+    sys.exit("Required first argument: path to PDB file containing solvated complex as written by leap.")
 
 parser = Bio.PDB.PDBParser(PERMISSIVE=True, QUIET=True)
 print "Parsing PDB file..."
