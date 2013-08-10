@@ -59,10 +59,12 @@ do
         exit 1
     elif [[ "$BATCH_SYSTEM" == "slurm" ]]; then
         #echo "Not implemented for Slurm. Exit."
-        sbatch --ntasks $NBR_CPUS --partition all --mem-per-cpu 2000 --time 1:30:00 \
-            --output 'slurm_mmpbsa_%j.outerr' \
-            --error 'slurm_mmpbsa_%j.outerr' \
-            ${ABSPATH_TO_SCRIPT} $NBR_CPUS            
+        sbatch  --ntasks ${NBR_CPUS} --nodes 1 --cpus-per-task 1 --partition mpi2 \
+            --mem-per-cpu 2000 \
+            --time 1:00:00 \
+            --output 'slurm_mmpbsa_mpi_%j.outerr' \
+            --error 'slurm_mmpbsa_mpi_%j.outerr' \
+            ${ABSPATH_TO_SCRIPT} ${NBR_CPUS}            
     else
         ${ABSPATH_TO_SCRIPT} "$NBR_CPUS" 1> /dev/null < /dev/null
     fi
