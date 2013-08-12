@@ -51,9 +51,28 @@ if [ $? != 0 ]; then
     exit 1
 fi
 
-# Read cpptraj dihedral commands as specified for this project.
-CPPTRAJ_DIHEDRAL_COMMANDS=$(cat $CPPTRAJ_DIHEDRAL_COMMANDS_INFILE)
+# Check for occurrence of 'dihedrals.dat' in each non-empty line of
+# $CPPTRAJ_DIHEDRAL_COMMANDS_INFILE
+log "Validate ${CPPTRAJ_DIHEDRAL_COMMANDS_INFILE}"
+python - <<EOF
+import sys
+with open('$CPPTRAJ_DIHEDRAL_COMMANDS_INFILE') as f:
+    for l in (_ for _ in f if _.strip()):
+        if not 'dihedrals.dat' in l:
+            sys.exit("Each non-empty line must contain 'dihedrals.dat'. Exit.")
+EOF
+EXITCODE=$?
+if [[ ${EXITCODE} != 0 ]]; then
+    err "$CPPTRAJ_DIHEDRAL_COMMANDS_INFILE validation failed."
+    exit 1
+fi
 
+
+
+# Read cpptraj dihedral commands as specified for this project,
+# replace output data set name with current name.
+CPPTRAJ_DIHEDRAL_COMMANDS=$(cat $CPPTRAJ_DIHEDRAL_COMMANDS_INFILE | \
+    sed "s/dihedrals.dat/${DIHEDRALOUT_ENTIRE}/g")
 
 # Measure dihedrals for entire trajectory.
 CPPTRAJINPUT="
@@ -64,7 +83,7 @@ trajin ${TRAJFILE}
 ${CPPTRAJ_DIHEDRAL_COMMANDS}
 
 # Increase column width so that long column headings are not cut.
-precision dihedrals.dat 25 4
+precision ${DIHEDRALOUT_ENTIRE} 25 4
 
 # Do not print frames column.
 datafile ${DIHEDRALOUT_ENTIRE} noxcol
@@ -83,6 +102,12 @@ print_run_command "${CMD}" 2>&1 | tee ${INFILE_WOEXT}.log
 check_required ${DIHEDRALOUT_ENTIRE}
 
 
+# Read cpptraj dihedral commands as specified for this project,
+# replace output data set name with current name.
+CPPTRAJ_DIHEDRAL_COMMANDS=$(cat $CPPTRAJ_DIHEDRAL_COMMANDS_INFILE | \
+    sed "s/dihedrals.dat/${DIHEDRALOUT_LAST}/g")
+
+
 # The same for last N frames.
 STARTFRAMENUMBER=$((TRAJFRAMECOUNT-${LAST_N}+1))
 CPPTRAJINPUT="
@@ -93,7 +118,7 @@ trajin ${TRAJFILE} ${STARTFRAMENUMBER}
 ${CPPTRAJ_DIHEDRAL_COMMANDS}
 
 # Increase column width so that long column headings are not cut.
-precision dihedrals.dat 25 4
+precision ${DIHEDRALOUT_LAST} 25 4
 
 # Do not print frames column.
 datafile ${DIHEDRALOUT_LAST} noxcol
