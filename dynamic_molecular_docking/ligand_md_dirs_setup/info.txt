@@ -1,0 +1,40 @@
+1) Adjust build_md_dirs...sh according to system details
+    (modify leap.in content: choose receptor PDB, implement disulfide bridge bonds, ...)
+
+2) Link receptor PDB file to link_to_each_ligand_dir.
+
+3) Create dmd_tmd_common.rest if required (containing e.g. internal heparin restraints).
+
+4) mkdir ../06_md
+    and e.g.
+    $ ./build_md_dirs_for_ligands.sh ../06_md ../04_create_lroms/ligands/*.pdb
+
+5) 
+    - tleap -f leap.in in one ligand dir
+    - validate system 
+    - identify core_atom_id and ligand_center_atom_id
+    - update these numbers in the corresponding files 
+
+6) run ./create_dmd_min_heat_equi.rest
+     (creates distance restraint for equilibration in order to keep distance between
+      core atom and ligand center atom fixed) 
+
+Reminder about restraint system:
+ - Only dmd_min_heat_equi.rest is applied during min/heat/equi before any of the tMD simulations
+ - dmd_tmd.rest is built by a script in two parts after equilibration, before tMD:
+    - a dynamically created part including a measured distance after equi
+    - a common part as given by dmd_tmd_common.rest file
+
+
+Creation of e.g. ligand-internal torsional restraints:
+
+e.g.
+$ amber-build-torsion-restraints-file per_residue_torsional_restraints_heparin_4c1.json ../06_md/ligand_heptetra_0001/top.prmtop ../06_md/ligand_heptetra_0001/initcoords.crd 2> /dev/null > heparin_internal_restraints.rest
+
+Apply these restraints during equilibration and during tMD (besides the tMD restraint)
+via dmd_tmd_common.rest:
+$ cat heparin_internal_restraints.rest > link_to_each_ligand_dir/dmd_tmd_common.rest 
+
+7) leap_all_md_dirs_command
+
+

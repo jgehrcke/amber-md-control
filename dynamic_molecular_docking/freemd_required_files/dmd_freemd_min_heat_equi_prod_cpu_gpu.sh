@@ -30,7 +30,7 @@ if [ $# -le 2 ]; then
     err "Usage: ${SCRIPTNAME} prmtopfile coordfile n_cpus [gpu_id]"
     err "1st argument: the prmtop file of the system to minimize."
     err "2nd argument: the initial coord file of the system to minimize."
-    err "3rd argument: the number of CPUs to use (for minimization in case of GPU)."
+    err "3rd argument: the number of CPUs to use (for first minimization) or or 'gpu' (runs minimization also on GPU)."
     err "4th argument: GPU ID (optional in case of GPU) or 'cpu' (runs all steps on CPU)."
     exit 1
 fi
@@ -45,18 +45,28 @@ NCPUS="$3"
 GPUID="$4"
 set -u
 
-# The third argument must in any case be a number.
-test_number "${NCPUS}"
+if [[ "${NCPUS}" != "gpu" ]]; then
+    # The third argument must in any case be a number.
+    test_number "${NCPUS}"
+    CPUENGINE="mpirun -np ${NCPUS} pmemd.MPI"
+    # Run first minimization on CPU by default.
+    MINENGINE="${CPUENGINE}"
+fi
 
-# ENGINE can bei either GPU or CPU engine. Set default here.
-ENGINE="pmemd.cuda"
-CPUENGINE="mpirun -np ${NCPUS} pmemd.MPI"
+GPUENGINE="pmemd.cuda"
+
+# Set default engine to GPU engine.
+ENGINE="${GPUENGINE}"
 
 # GPUID is either not set (default GPU), a number (use *that* GPU) or 'cpu'.
 if [ -z "$GPUID" ]; then
     GPUID="none"
 else
     if [[ "${GPUID}" == "cpu" ]]; then
+        if [[ "${NCPUS}" == "gpu" ]]; then
+            err "gpu/cpu option collision."
+            exit 1
+        fi
         # Use CPU engine as default engine, mark GPUID as being useless.
         ENGINE="${CPUENGINE}"
         GPUID="none"
@@ -64,6 +74,18 @@ else
         test_number "${GPUID}"
     fi
 fi
+
+
+# NCPUs is either a number or 'gpu'.
+if [[ "${NCPUS}" == "gpu" ]]; then
+    # Use GPU engine also for first minimization.
+    MINENGINE="${GPUENGINE}"
+fi
+
+log "Default engine: $ENGINE"
+log "First minimization engine: $MINENGINE"
+log "debug: NCPUS: $NCPUS"
+log "debug: GPUID: $GPUID"
 
 # Useful debug output.
 echo "Hostname: $(hostname)"
@@ -95,6 +117,29 @@ EQUIINFILE="${EQUIPREFIX}.in"
 PRODPREFIX="production_NVT"
 PRODINFILE="${PRODPREFIX}.in"
 
+
+# In case of free MD production, an unwanted overwrite is uncool.
+# Also, multiple jobs working on the same should be prevented.
+# Implement some mechanisms against this.
+
+PROD_OUTFILE="${PRODPREFIX}.out"
+if [ -r ${PROD_OUTFILE} ]; then
+    OUTFILE_FINISH=$(tail ${PROD_OUTFILE} -n 1 | grep "wall time")
+    if [ ! -z "${OUTFILE_FINISH}" ]; then
+        err "${PWD}: ${PROD_OUTFILE} with time stats at the end."
+        err " -> free MD in this directory already finished. Exit."
+        exit
+    fi
+fi
+# http://mywiki.wooledge.org/BashFAQ/045
+exec 200> _lockfile
+    if ! flock -n 200 ; then
+        echo "Could not acquire lock. Another instance is running here. Exit.";
+        exit
+    fi
+# This now runs under the lock until 200 is closed (it 
+# will be closed automatically when the script ends).
+
 echo "heatup duration: ${HEATUP_TIME_NS} ns, time steps: ${HEATUP_TIME_STEPS}"
 echo "equi duration: ${EQUI_TIME_NS} ns, time steps: ${EQUI_TIME_STEPS}"
 echo "prod duration: ${PROD_TIME_NS} ns, time steps: ${PROD_TIME_STEPS}"
@@ -113,7 +158,6 @@ else
     NMRREST=""
     NMROPT="0"
 fi
-
 
 # MINIMIZATION
 # ============================================================================
@@ -176,7 +220,7 @@ cat ${MIN2FILE}
 
 
 echo "Running first minimization (fixed solute)..."
-CMD="time ${CPUENGINE} -O -i ${MIN1FILE} -o ${MIN1PREFIX}.out -p ${PRMTOP} \
+CMD="time ${MINENGINE} -O -i ${MIN1FILE} -o ${MIN1PREFIX}.out -p ${PRMTOP} \
      -c ${INITCRD} -r ${MIN1PREFIX}.rst -ref ${INITCRD}"
 print_run_command "${CMD}"
 if [ $? != 0 ]; then

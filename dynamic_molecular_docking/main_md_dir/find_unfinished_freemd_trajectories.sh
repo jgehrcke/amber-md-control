@@ -56,7 +56,7 @@ PRMTOP="top.prmtop"
 FREEMDOUTFILE="production_NVT.out"
 TRAJFILE="production_NVT.mdcrd"
 FREEMDDIR="freemd"
-
+REC_LIC_DIST_AFTER_TMD_FILE="receptor_ligand_min_distance_after_tmd"
 
 for LIGDIR in ligand_*; do
     if [ -d "$LIGDIR" ]; then
@@ -77,7 +77,12 @@ for LIGDIR in ligand_*; do
             cd ..; continue
         fi
         if [ ! -f "${FREEMDOUTFILE}" ]; then
-            log "${PWD}: no ${FREEMDOUTFILE}."
+            if [ -f "${REC_LIC_DIST_AFTER_TMD_FILE}" ]; then
+                DISTANCE="rec-lig-distance: $(cat ${REC_LIC_DIST_AFTER_TMD_FILE})"
+            else
+                DISTANCE=""
+            fi
+            log "${PWD}: no ${FREEMDOUTFILE}. ${DISTANCE}"
             cd ../../ ; continue
         fi
         if $STARTEDONLY ; then
