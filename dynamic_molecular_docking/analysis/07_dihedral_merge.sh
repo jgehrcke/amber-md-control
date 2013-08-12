@@ -14,7 +14,7 @@ fi
 source "${DMD_CODE_DIR}/common_code.sh"
 set -e
 
-OUT_DIR_MERGED_DATA="${PWD}/mmgbsa_decomp_merged_analysis"
+OUT_DIR_MERGED_DATA="${PWD}/dihedral_merged_analysis"
 if [[ -d "$OUT_DIR_MERGED_DATA" ]]; then
     rm -rf "$OUT_DIR_MERGED_DATA"
     mkdir "$OUT_DIR_MERGED_DATA"
@@ -26,21 +26,29 @@ else
     mkdir "$OUT_DIR_MERGED_DATA"
     echo "Output directory $OUT_DIR_MERGED_DATA created."
 fi
-OUT_DIR_PER_RUN_DATA="per_run_data"
-if [[ ! -d "$OUT_DIR_PER_RUN_DATA" ]]; then
-    mkdir "$OUT_DIR_PER_RUN_DATA"
-fi
+
+# Analyze cpptraj's dihedral data files. For each free MD within one DMD run,
+# (currently) two data files are available: one for the entire trajectory and
+# one for the last N frames. Each file contains one column per specific
+# dihedral. The goal is to merge all data for one specific dihedral, i.e.
+# append all columns and evaluate the merged data in histogram-fasion.
+# During this analysis, hbond data among all DMD runs are merged.
+# This creates various output files in $OUT_DIR_MERGED_DATA.
+
+# These files are currently available in each free MD dir:
+# DIHEDRALOUT_ENTIRE="dihedrals_over_frames_entiretraj.dat"
+# DIHEDRALOUT_LAST="dihedrals_over_frames_last${LAST_N}frames.dat"
 
 LAST_N=250
-PROJECTNAME="mmgbsa_decomp_last${LAST_N}frames"
+log "Collecting cpptraj's dihedral data files for the ${LAST_N} free MD frames and merging data..."
+find "$MD_DIR" -name "dihedrals_over_frames_last${LAST_N}frames.dat" | \
+    python utils/merge_dihedral_data.py "${OUT_DIR_MERGED_DATA}/freemd_last${LAST_N}frames"
 
-# Analyze FINAL_DECOMP_MMPBSA.dat files as written by MMPBSA.py from AT 13.
-# During this analysis, decomp data among all DMD runs are merged.
-# This creates various output files in $OUT_DIR_MERGED_DATA.
-log "Collecting decomp data files and merging data..."
-find "$MD_DIR" -wholename "*/${PROJECTNAME}/FINAL_DECOMP_MMPBSA.dat" | \
-    python utils/merge_mmgbsa_decomp_data.py \
-    --outdir "${OUT_DIR_MERGED_DATA}/${PROJECTNAME}" \
-    --binding-data-file "${OUT_DIR_PER_RUN_DATA}/mmpbsa_freemd_last${LAST_N}frames.dat"
+log "Collecting cpptraj's dihedral data files for the entire free MD trajectories and merging data..."
+log "Collecting cpptraj's dihedral data files and merging data..."
+find "$MD_DIR" -name "dihedrals_over_frames_entiretraj.dat" | \
+    python utils/merge_dihedral_data.py "${OUT_DIR_MERGED_DATA}/freemd_entiretraj"
 
-exit
+# The merging could be done in a more sophisticated fashion, e.g. merge only
+# data of those trajectories that end up with a strong binding as measured
+# via e.g. MM-PBSA.
