@@ -31,14 +31,17 @@ if [[ ! -d "$OUT_DIR_PER_RUN_DATA" ]]; then
     mkdir "$OUT_DIR_PER_RUN_DATA"
 fi
 
-#LAST_N=250
-PROJECTNAME="mmgbsa_decomp_last250frames"
+LAST_N=250
+PROJECTNAME="mmgbsa_decomp_last${LAST_N}frames"
 
 # Analyze FINAL_DECOMP_MMPBSA.dat files as written by MMPBSA.py from AT 13.
 # During this analysis, decomp data among all DMD runs are merged.
 # This creates various output files in $OUT_DIR_MERGED_DATA.
 log "Collecting decomp data files and merging data..."
-find "$MD_DIR" -wholename "*/${PROJECTNAME}/FINAL_DECOMP_MMPBSA.dat" | python utils/merge_mmgbsa_decomp_data.py "${OUT_DIR_MERGED_DATA}/${PROJECTNAME}"
+find "$MD_DIR" -wholename "*/${PROJECTNAME}/FINAL_DECOMP_MMPBSA.dat" | \
+    python utils/merge_mmgbsa_decomp_data.py \
+    --outdir "${OUT_DIR_MERGED_DATA}/${PROJECTNAME}" \
+    --binding-data-file "${OUT_DIR_PER_RUN_DATA}/mmpbsa_freemd_last${LAST_N}frames.dat"
 
 exit
 
