@@ -6,12 +6,8 @@
 import os
 import sys
 import logging
-from collections import defaultdict
-from itertools import izip
-
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
+import StringIO
 
 
 logging.basicConfig(
@@ -19,10 +15,6 @@ logging.basicConfig(
     datefmt='%H:%M:%S')
 log = logging.getLogger()
 log.setLevel(logging.INFO)
-
-
-RECEPTOR_RESIDUE_FRACTIONS = defaultdict(list)
-RESIDUE_PAIR_FRACTIONS = defaultdict(list)
 
 
 def main():
@@ -47,15 +39,15 @@ def main():
         if not os.path.isfile(fp):
             log.error("No such file: '%s'" % fp)
         else:
-            log.debug("Processing '%s'" % fp)
+            log.info("Processing '%s'" % fp)
             single_dataframes.append(single_dihedral_datafile_to_dataframe(fp))
 
     log.info("Processed %s data sets (files)." % len(single_dataframes))
     log.info("Merging data...")
     merged_df = pd.concat(single_dataframes)
-    output_csv_filename = 'dihedral_data_merged.dat'
-    log.info("Writing merged data to '%s" % output_csv_filename)
-    merged_df.to_csv(output_csv_filename, index=False)
+    output_csv_filepath = os.path.join(output_dir, 'dihedral_data_merged.dat')
+    log.info("Writing merged data to '%s" % output_csv_filepath)
+    merged_df.to_csv(output_csv_filepath, index=False)
 
 
 
