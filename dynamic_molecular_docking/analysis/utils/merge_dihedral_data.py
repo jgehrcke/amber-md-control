@@ -80,6 +80,11 @@ def single_dihedral_datafile_to_dataframe(cpptraj_dihedraldata_filepath):
     #log.debug("Dataframe head:\n%s", df.head())
     log.info("Built pandas DataFrame with %s columns and %s rows.",
         len(df.columns), len(df))
+    for c in df.columns:
+        #log.info("Column '%s' data type: %s", c, df[c].dtype)
+        # Str comp. rather than numpy namespace lookup.
+        if str(df[c].dtype) != "float64":
+            log.warning("Error: all columns must be of dtype float.")
     return df
 
 
