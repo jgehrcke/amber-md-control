@@ -6,7 +6,7 @@ STARTDIR="$PWD"
 SCRIPT_TO_EXECUTE="./mmgbsa_decomp_freemd_lastNframes.sh"
 ABSPATH_TO_SCRIPT=$(readlink -f ${SCRIPT_TO_EXECUTE})
 
-BATCH_SYSTEM=""
+BATCH_SYSTEM""
 DRYRUN=false
 
 for i in "$@"
@@ -52,19 +52,25 @@ do
         continue
     fi
 
-    if [[ "$BATCH_SYSTEM" == "sge" ]]; then
-        qsub -pe smp $NBR_CPUS -cwd -V -q bioinfp.q -b yes -o mmpbsa_sge.log -j y "/bin/bash ${ABSPATH_TO_SCRIPT} $NBR_CPUS" < /dev/null
-    elif [[ "$BATCH_SYSTEM" == "lsf" ]]; then
-        echo "Not implemented for LSF. Exit."
-        exit 1
-    elif [[ "$BATCH_SYSTEM" == "slurm" ]]; then
-        #echo "Not implemented for Slurm. Exit."
-        sbatch  --ntasks ${NBR_CPUS} --nodes 1 --cpus-per-task 1 --partition mpi2 \
-            --mem-per-cpu 2000 \
-            --time 1:00:00 \
-            --output 'slurm_mmgbsa_decomp_mpi_%j.outerr' \
-            --error 'slurm_mmgbsa_decomp_mpi_%j.outerr' \
-            ${ABSPATH_TO_SCRIPT} ${NBR_CPUS}            
+    if [[ $BATCH_SYSTEM != "" ]]; then
+        if [[ "$BATCH_SYSTEM" == "sge" ]]; then
+            qsub -pe smp $NBR_CPUS -cwd -V -q bioinfp.q -b yes \
+                -o mmgbsa_decomp_sge.log -j y "/bin/bash ${ABSPATH_TO_SCRIPT} $NBR_CPUS" < /dev/null
+        elif [[ "$BATCH_SYSTEM" == "lsf" ]]; then
+            echo "Not implemented for LSF. Exit."
+            exit 1
+        elif [[ "$BATCH_SYSTEM" == "slurm" ]]; then
+            #echo "Not implemented for Slurm. Exit."
+            sbatch  --ntasks ${NBR_CPUS} --nodes 1 --cpus-per-task 1 --partition mpi2 \
+                --mem-per-cpu 2000 \
+                --time 1:00:00 \
+                --output 'slurm_mmpbsa_mpi_%j.outerr' \
+                --error 'slurm_mmpbsa_mpi_%j.outerr' \
+                ${ABSPATH_TO_SCRIPT} ${NBR_CPUS}            
+        else
+            echo "Batch system $BATCH_SYSTEM not known. Exit."
+            exit 1
+        fi
     else
         ${ABSPATH_TO_SCRIPT} "$NBR_CPUS" 1> /dev/null < /dev/null
     fi
