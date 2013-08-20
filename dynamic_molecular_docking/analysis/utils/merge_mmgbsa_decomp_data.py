@@ -11,6 +11,7 @@ import argparse
 
 import pandas as pd
 import numpy as np
+import scipy.stats
 import matplotlib.pyplot as plt
 
 
@@ -21,18 +22,19 @@ log = logging.getLogger()
 log.setLevel(logging.DEBUG)
 
 
-BOUND_FILTER_DELTA_G_HIGHEST = -10
-
+BOUND_FILTER_DELTA_G_HIGHEST = -20
+BOUND_FILTER_DELTA_G_TOP_FRACTION = 0.5
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--outdir', required=True)
-    parser.add_argument('--binding-data-file', required=True)
+    parser.add_argument('outdir')
+    parser.add_argument('binding_data_file', metavar='binding-data-file', )
     args = parser.parse_args()
+    print args
 
     if os.path.exists(args.outdir):
-        sys.exit("Already exists: %s" % args.outdir)
+        sys.exit("Output dir already exists: %s" % args.outdir)
 
     os.mkdir(args.outdir)
     logfilepath = os.path.join(
@@ -42,18 +44,19 @@ def main():
     log.addHandler(fh)
 
     # Get MMPBSA binding data from external file. This file contains data
-    # for all DMD runs.  Store data in pandas DataFrame.
+    # for all DMD runs, it correlates run ID with binding energy.
+    # Store data in pandas DataFrame.
     log.info("Read '%s'." % args.binding_data_file)
     binding_data = pd.read_csv(
         args.binding_data_file,
         index_col='run_id')
-    # Isolate delta G column (pandas Series), can be indexed with run ID.
+    # Isolate delta G column (pandas Series), can later easily be indexed with
+    # run ID.
     mmpbsa_deltag = binding_data['mmpbsa_freemdlast250frames_deltag']
 
     # Read decomp data files (one per DMD run).
     decomp_data_frames = []
-    nbr_processed_data_sets = 0
-    for idx, filepath in enumerate(sys.stdin):
+    for filepath in sys.stdin:
         filepath = filepath.strip()
         if not os.path.isfile(filepath):
             log.error("No such file: '%s'" % filepath)
@@ -62,11 +65,46 @@ def main():
             decomp_data_frames.append(process_single_decomp_file(filepath))
             # Modify dataframe object on the fly, note down DMD run id.
             decomp_data_frames[-1]._dmd_run_id = run_id_from_path(filepath)
-            nbr_processed_data_sets += 1
+    log.info("Read in %s data sets (files)." % len(decomp_data_frames))
 
-    log.info("Read in %s data sets (files)." % nbr_processed_data_sets)
+    merged_data, nbr_datasets_for_merge = merge_all_runs_if_bound(
+        decomp_data_frames, mmpbsa_deltag)
+    plot_top_residues(merged_data, nbr_datasets_for_merge)
 
-    merge_all_runs_if_bound(decomp_data_frames, mmpbsa_deltag)
+
+def plot_top_residues(merged_data, nbr_datasets_for_merge):
+    merged_data_sorted = merged_data.sort([('total_mean','mean')])
+    print_N = 10
+    plot_N = 6
+    log.info("Top %s of residues by averaged contribution to binding:\n%s",
+        print_N, merged_data_sorted.head(print_N)['total_mean'])
+    df_for_plot = merged_data_sorted.head(plot_N)
+
+    plt.errorbar(
+        x=range(plot_N),
+        y=df_for_plot[('total_mean','mean')].values,
+        yerr=df_for_plot[('total_mean','sem')].values,
+        linestyle='None',
+        linewidth=1.5,
+        color='black',
+        marker='o', mfc='black',
+        markersize=7, capsize=7)
+    # Dataframe index contains the location names, build proper strings.
+    residue_names = ["_".join(loc.split()[1:]) for loc in df_for_plot.index.values]
+    plt.xticks(
+        range(plot_N),
+        residue_names,
+        rotation=45,
+        fontsize=12)
+    plt.xlim([-1, plot_N])
+    plt.xlabel('Residue',  fontsize=16)
+    plt.ylabel(u'$\\langle \mathrm{\Delta G} \\rangle$ [kcal/mol]',  fontsize=16)
+    plt.title('MM-GBSA SRED, averaged over %s DMD runs' % nbr_datasets_for_merge)
+    #pylab.legend(numpoints=1)
+    plt.tight_layout()
+    #pylab.savefig("clustering_dmd_vs_ad3_plots_pub.pdf")
+    #pylab.savefig("clustering_dmd_vs_ad3_plots_pub.png")
+    plt.show()
 
 
 def merge_all_runs_if_bound(decomp_data_frames, mmpbsa_deltag):
@@ -75,7 +113,8 @@ def merge_all_runs_if_bound(decomp_data_frames, mmpbsa_deltag):
         BOUND_FILTER_DELTA_G_HIGHEST)
     dataframes = [df for df in decomp_data_frames if
         mmpbsa_deltag[df._dmd_run_id] < BOUND_FILTER_DELTA_G_HIGHEST]
-    log.info("%s systems left." % len(dataframes))
+    nbr_datasets_for_merge = len(dataframes)
+    log.info("%s DMD runs fulfill criterion." % nbr_datasets_for_merge)
 
     # Remove ligand data from data sets.
     for idx, df in enumerate(dataframes[:]):
@@ -90,45 +129,18 @@ def merge_all_runs_if_bound(decomp_data_frames, mmpbsa_deltag):
     merged_data = pd.concat(
         dataframes,
         ignore_index=True).groupby(
-            "location").agg([np.mean, np.std])
+            "location").agg([np.mean, np.std, scipy.stats.sem])
+    log.info("Shape of merged data: %s.", merged_data.shape)
+    log.info("Merged data for %s residues.", len(merged_data.index))
 
-    print merged_data.head()
-    #sys.exit()
-    print "averaged top 5"
-    print merged_data.sort([('total_mean','mean')]).head()
-
-
-    sys.exit()
-
-    head1 = dataframes[0].head()
-
-    head2 = dataframes[1].head()
-
-    print "h1"
-    print head1['estatic_mean']
-    print "h2"
-    print head2['estatic_mean']
-
-    combination = pd.concat([head1, head2], ignore_index=True)
-    #print combination
+    return merged_data, nbr_datasets_for_merge
 
 
-
-    print "GROPUPBY"
-    print combination.groupby("location")
-
-    avg = combination.groupby("location").agg([np.mean, np.std])
-    print "average:"
-    print avg['estatic_mean']
-
-
-
-
-def evaluate_plot_data(decomp_data_frames):
-    df = decomp_data_frames[0]
-    receptor_filter = df['location'].map(lambda x: x.startswith('R'))
-    df_receptor = df[receptor_filter]
-    print df_receptor.sort('total_mean').iloc[:5]
+#def evaluate_plot_data(decomp_data_frames):
+#    df = decomp_data_frames[0]
+#    receptor_filter = df['location'].map(lambda x: x.startswith('R'))
+#    df_receptor = df[receptor_filter]
+#    print df_receptor.sort('total_mean').iloc[:5]
 
 
 def process_single_decomp_file(filepath):

@@ -40,7 +40,6 @@ PROJECTNAME="mmgbsa_decomp_last${LAST_N}frames"
 log "Collecting decomp data files and merging data..."
 find "$MD_DIR" -wholename "*/${PROJECTNAME}/FINAL_DECOMP_MMPBSA.dat" | \
     python utils/merge_mmgbsa_decomp_data.py \
-    --outdir "${OUT_DIR_MERGED_DATA}/${PROJECTNAME}" \
-    --binding-data-file "${OUT_DIR_PER_RUN_DATA}/mmpbsa_freemd_last${LAST_N}frames.dat"
-
+        "${OUT_DIR_MERGED_DATA}/${PROJECTNAME}" \
+        "${OUT_DIR_PER_RUN_DATA}/mmpbsa_freemd_last${LAST_N}frames.dat"
 exit
