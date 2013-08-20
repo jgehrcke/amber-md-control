@@ -23,7 +23,7 @@ log.setLevel(logging.DEBUG)
 
 
 BOUND_FILTER_DELTA_G_HIGHEST = -20
-BOUND_FILTER_DELTA_G_TOP_FRACTION = 0.5
+BOUND_FILTER_DELTA_G_TOP_FRACTION = 0.2
 
 
 def main():
@@ -63,8 +63,11 @@ def main():
         else:
             log.debug("Processing '%s'" % filepath)
             decomp_data_frames.append(process_single_decomp_file(filepath))
-            # Modify dataframe object on the fly, note down DMD run id.
-            decomp_data_frames[-1]._dmd_run_id = run_id_from_path(filepath)
+            # Modify dataframe object on the fly, note down DMD run id as well
+            # as MM-PBSA deltaG.
+            rid = run_id_from_path(filepath)
+            decomp_data_frames[-1]._dmd_run_id = rid
+            decomp_data_frames[-1]._mmpbsa_deltag = mmpbsa_deltag[rid]
     log.info("Read in %s data sets (files)." % len(decomp_data_frames))
 
     merged_data, nbr_datasets_for_merge = merge_all_runs_if_bound(
@@ -109,38 +112,52 @@ def plot_top_residues(merged_data, nbr_datasets_for_merge):
 
 def merge_all_runs_if_bound(decomp_data_frames, mmpbsa_deltag):
     # Merge decomp data of (at least weakly) bound systems.
-    log.info("Filter runs with MMPBSA delta G smaller than %s kcal/mol." %
-        BOUND_FILTER_DELTA_G_HIGHEST)
-    dataframes = [df for df in decomp_data_frames if
-        mmpbsa_deltag[df._dmd_run_id] < BOUND_FILTER_DELTA_G_HIGHEST]
-    nbr_datasets_for_merge = len(dataframes)
-    log.info("%s DMD runs fulfill criterion." % nbr_datasets_for_merge)
+
+    log.info(("Filter top fraction (%.2f) of decomp data by MM-PBSA "
+        "delta G."), BOUND_FILTER_DELTA_G_TOP_FRACTION)
+    top_n = int(round(
+        BOUND_FILTER_DELTA_G_TOP_FRACTION * len(decomp_data_frames)))
+    log.info("-> extract top %s.", top_n)
+
+    #log.info("Filter runs with MMPBSA delta G smaller than %s kcal/mol." %
+    #    BOUND_FILTER_DELTA_G_HIGHEST)
+    #dataframes = [df for df in decomp_data_frames if
+    #    mmpbsa_deltag[df._dmd_run_id] < BOUND_FILTER_DELTA_G_HIGHEST]
+
+    dframes_sorted_by_mmpbsa_deltag_first_best = sorted(
+        decomp_data_frames, key=lambda x: x._mmpbsa_deltag)
+    log.info("MM-PBSA delta G of rank 1: %.2f kcal/mol",
+        dframes_sorted_by_mmpbsa_deltag_first_best[0]._mmpbsa_deltag)
+    log.info("MM-PBSA delta G of rank %s: %.2f kcal/mol", top_n,
+        dframes_sorted_by_mmpbsa_deltag_first_best[top_n-1]._mmpbsa_deltag)
+    dframes_for_merge = dframes_sorted_by_mmpbsa_deltag_first_best[:top_n]
+    nbr_datasets_for_merge = len(dframes_for_merge)
+    log.info("Data of %s DMD runs fulfill criterion." % nbr_datasets_for_merge)
 
     # Remove ligand data from data sets.
-    for idx, df in enumerate(dataframes[:]):
+    for idx, df in enumerate(dframes_for_merge[:]):
         receptor_filter = df['location'].map(lambda x: x.startswith('R'))
-        dataframes[idx] = df[receptor_filter]
+        dframes_for_merge[idx] = df[receptor_filter]
 
+    dframes_for_merge_receptor_only = [
+        df[df['location'].map(lambda x: x.startswith('R'))] for df in
+            dframes_for_merge]
+
+    merged_data = merge_dataframes_by_location(dframes_for_merge_receptor_only)
+    log.info("Shape of merged data: %s.", merged_data.shape)
+    log.info("Merged data for %s residues.", len(merged_data.index))
+    return merged_data, nbr_datasets_for_merge
+
+
+def merge_dataframes_by_location(dataframes):
     # http://stackoverflow.com/a/15135546/145400
     # http://pandas.pydata.org/pandas-docs/stable/groupby.html
     # http://stackoverflow.com/questions/14733871/multi-index-sorting-in-pandas
     # https://github.com/pydata/pandas/issues/4370
-
-    merged_data = pd.concat(
+    return pd.concat(
         dataframes,
         ignore_index=True).groupby(
             "location").agg([np.mean, np.std, scipy.stats.sem])
-    log.info("Shape of merged data: %s.", merged_data.shape)
-    log.info("Merged data for %s residues.", len(merged_data.index))
-
-    return merged_data, nbr_datasets_for_merge
-
-
-#def evaluate_plot_data(decomp_data_frames):
-#    df = decomp_data_frames[0]
-#    receptor_filter = df['location'].map(lambda x: x.startswith('R'))
-#    df_receptor = df[receptor_filter]
-#    print df_receptor.sort('total_mean').iloc[:5]
 
 
 def process_single_decomp_file(filepath):
