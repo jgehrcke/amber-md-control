@@ -22,23 +22,23 @@ log = logging.getLogger()
 log.setLevel(logging.DEBUG)
 
 
-BOUND_FILTER_DELTA_G_HIGHEST = -20
-BOUND_FILTER_DELTA_G_TOP_FRACTION = 0.2
-
+#BOUND_FILTER_DELTA_G_HIGHEST = -20
+BOUND_FILTER_DELTA_G_TOP_FRACTION = 0.4
+options = None
 
 def main():
+    global options
     parser = argparse.ArgumentParser()
     parser.add_argument('outdir')
     parser.add_argument('binding_data_file', metavar='binding-data-file', )
-    args = parser.parse_args()
-    print args
+    options = parser.parse_args()
 
-    if os.path.exists(args.outdir):
-        sys.exit("Output dir already exists: %s" % args.outdir)
+    if os.path.exists(options.outdir):
+        sys.exit("Output dir already exists: %s" % options.outdir)
 
-    os.mkdir(args.outdir)
+    os.mkdir(options.outdir)
     logfilepath = os.path.join(
-        args.outdir, "%s.log" % os.path.basename(sys.argv[0]))
+        options.outdir, "%s.log" % os.path.basename(sys.argv[0]))
     fh = logging.FileHandler(logfilepath, encoding='utf-8')
     fh.setLevel(logging.DEBUG)
     log.addHandler(fh)
@@ -46,9 +46,9 @@ def main():
     # Get MMPBSA binding data from external file. This file contains data
     # for all DMD runs, it correlates run ID with binding energy.
     # Store data in pandas DataFrame.
-    log.info("Read '%s'." % args.binding_data_file)
+    log.info("Read '%s'." % options.binding_data_file)
     binding_data = pd.read_csv(
-        args.binding_data_file,
+        options.binding_data_file,
         index_col='run_id')
     # Isolate delta G column (pandas Series), can later easily be indexed with
     # run ID.
@@ -68,21 +68,39 @@ def main():
             rid = run_id_from_path(filepath)
             decomp_data_frames[-1]._dmd_run_id = rid
             decomp_data_frames[-1]._mmpbsa_deltag = mmpbsa_deltag[rid]
-    log.info("Read in %s data sets (files)." % len(decomp_data_frames))
+    log.info("Proccessed %s input data files." % len(decomp_data_frames))
 
-    merged_data, nbr_datasets_for_merge = merge_all_runs_if_bound(
-        decomp_data_frames, mmpbsa_deltag)
-    plot_top_residues(merged_data, nbr_datasets_for_merge)
+    log.info("Filter and merge data for receptor residues.")
+    merged_data_receptor, nbr_datasets_for_merge = merge_all_runs_if_bound(
+        decomp_data_frames,
+        locationfilter=lambda x: x.startswith('R'))
+    log.info("Filter and merge data for ligand residues.")
+    merged_data_ligand, nbr_datasets_for_merge = merge_all_runs_if_bound(
+        decomp_data_frames,
+        locationfilter=lambda x: x.startswith('L'))
+    plot_top_residues(
+        merged_data_receptor,
+        nbr_datasets_for_merge,
+        reclig='receptor')
+    plot_top_residues(
+        merged_data_ligand,
+        nbr_datasets_for_merge,
+        reclig='ligand')
 
 
-def plot_top_residues(merged_data, nbr_datasets_for_merge):
+def plot_top_residues(
+        merged_data,
+        nbr_datasets_for_merge,
+        reclig):
     merged_data_sorted = merged_data.sort([('total_mean','mean')])
     print_N = 10
     plot_N = 6
-    log.info("Top %s of residues by averaged contribution to binding:\n%s",
-        print_N, merged_data_sorted.head(print_N)['total_mean'])
+    log.info("Top %s of %s residues by averaged contribution to binding:\n%s",
+        print_N, reclig, merged_data_sorted.head(print_N)['total_mean'])
     df_for_plot = merged_data_sorted.head(plot_N)
 
+    log.info("Creating new figure.")
+    fig = plt.figure()
     plt.errorbar(
         x=range(plot_N),
         y=df_for_plot[('total_mean','mean')].values,
@@ -93,24 +111,37 @@ def plot_top_residues(merged_data, nbr_datasets_for_merge):
         marker='o', mfc='black',
         markersize=7, capsize=7)
     # Dataframe index contains the location names, build proper strings.
-    residue_names = ["_".join(loc.split()[1:]) for loc in df_for_plot.index.values]
+    residue_names = [
+        "_".join(loc.split()[1:]) for loc in df_for_plot.index.values]
     plt.xticks(
         range(plot_N),
         residue_names,
         rotation=45,
         fontsize=12)
     plt.xlim([-1, plot_N])
-    plt.xlabel('Residue',  fontsize=16)
-    plt.ylabel(u'$\\langle \mathrm{\Delta G} \\rangle$ [kcal/mol]',  fontsize=16)
-    plt.title('MM-GBSA SRED, averaged over %s DMD runs' % nbr_datasets_for_merge)
-    #pylab.legend(numpoints=1)
+    plt.xlabel('%s residue' % reclig,  fontsize=16)
+    plt.ylabel(
+        u'$\\langle \mathrm{\Delta G} \\rangle$ [kcal/mol]',
+        fontsize=16)
+    frac_percent = int(100 * BOUND_FILTER_DELTA_G_TOP_FRACTION)
+    plt.title(("MM-GBSA SRED (%s), averaged over %s DMD runs\n"
+        "(top %s %% of decomp data by MM-PBSA delta G)") % (
+        reclig, nbr_datasets_for_merge, frac_percent))
     plt.tight_layout()
-    #pylab.savefig("clustering_dmd_vs_ad3_plots_pub.pdf")
-    #pylab.savefig("clustering_dmd_vs_ad3_plots_pub.png")
-    plt.show()
+    outfile_name_prefix = "%s_top%s_residues_of_top_%spercent_dmd_runs" % (
+        reclig, plot_N, frac_percent)
+    outfile_path_prefix = os.path.join(options.outdir, outfile_name_prefix)
+    pdfp = "%s.pdf" % outfile_path_prefix
+    pngp = "%s.png" % outfile_path_prefix
+    log.info("(Over)writing %s", pdfp)
+    plt.savefig(pdfp)
+    log.info("(Over)writing %s", pngp)
+    plt.savefig(pngp, dpi=250)
+    plt.close(fig)
+    #plt.show()
 
 
-def merge_all_runs_if_bound(decomp_data_frames, mmpbsa_deltag):
+def merge_all_runs_if_bound(decomp_data_frames, locationfilter):
     # Merge decomp data of (at least weakly) bound systems.
 
     log.info(("Filter top fraction (%.2f) of decomp data by MM-PBSA "
@@ -118,11 +149,6 @@ def merge_all_runs_if_bound(decomp_data_frames, mmpbsa_deltag):
     top_n = int(round(
         BOUND_FILTER_DELTA_G_TOP_FRACTION * len(decomp_data_frames)))
     log.info("-> extract top %s.", top_n)
-
-    #log.info("Filter runs with MMPBSA delta G smaller than %s kcal/mol." %
-    #    BOUND_FILTER_DELTA_G_HIGHEST)
-    #dataframes = [df for df in decomp_data_frames if
-    #    mmpbsa_deltag[df._dmd_run_id] < BOUND_FILTER_DELTA_G_HIGHEST]
 
     dframes_sorted_by_mmpbsa_deltag_first_best = sorted(
         decomp_data_frames, key=lambda x: x._mmpbsa_deltag)
@@ -132,19 +158,15 @@ def merge_all_runs_if_bound(decomp_data_frames, mmpbsa_deltag):
         dframes_sorted_by_mmpbsa_deltag_first_best[top_n-1]._mmpbsa_deltag)
     dframes_for_merge = dframes_sorted_by_mmpbsa_deltag_first_best[:top_n]
     nbr_datasets_for_merge = len(dframes_for_merge)
-    log.info("Data of %s DMD runs fulfill criterion." % nbr_datasets_for_merge)
 
-    # Remove ligand data from data sets.
-    for idx, df in enumerate(dframes_for_merge[:]):
-        receptor_filter = df['location'].map(lambda x: x.startswith('R'))
-        dframes_for_merge[idx] = df[receptor_filter]
-
-    dframes_for_merge_receptor_only = [
-        df[df['location'].map(lambda x: x.startswith('R'))] for df in
+    # Filter single data 'rows' by location using `locationfilter`.
+    dframes_for_merge_locfiltered = [
+        df[df['location'].map(locationfilter)] for df in
             dframes_for_merge]
 
-    merged_data = merge_dataframes_by_location(dframes_for_merge_receptor_only)
-    log.info("Shape of merged data: %s.", merged_data.shape)
+    merged_data = merge_dataframes_by_location(dframes_for_merge_locfiltered)
+    log.info("Shape of merged and location-filtered data: %s.",
+        merged_data.shape)
     log.info("Merged data for %s residues.", len(merged_data.index))
     return merged_data, nbr_datasets_for_merge
 
