@@ -64,8 +64,8 @@ do
             sbatch  --ntasks ${NBR_CPUS} --nodes 1 --cpus-per-task 1 --partition mpi2 \
                 --mem-per-cpu 2000 \
                 --time 1:00:00 \
-                --output 'slurm_mmpbsa_mpi_%j.outerr' \
-                --error 'slurm_mmpbsa_mpi_%j.outerr' \
+                --output 'slurm_mmgbsa_mpi_%j.outerr' \
+                --error 'slurm_mmgbsa_mpi_%j.outerr' \
                 ${ABSPATH_TO_SCRIPT} ${NBR_CPUS}            
         else
             echo "Batch system $BATCH_SYSTEM not known. Exit."
