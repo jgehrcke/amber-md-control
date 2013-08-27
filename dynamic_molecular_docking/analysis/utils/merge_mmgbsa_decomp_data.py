@@ -133,8 +133,11 @@ def plot_top_residues(
     outfile_path_prefix = os.path.join(options.outdir, outfile_name_prefix)
     pdfp = "%s.pdf" % outfile_path_prefix
     pngp = "%s.png" % outfile_path_prefix
+    svgp = "%s.svg" % outfile_path_prefix
     log.info("(Over)writing %s", pdfp)
     plt.savefig(pdfp)
+    log.info("(Over)writing %s", svgp)
+    plt.savefig(svgp)
     log.info("(Over)writing %s", pngp)
     plt.savefig(pngp, dpi=250)
     plt.close(fig)
