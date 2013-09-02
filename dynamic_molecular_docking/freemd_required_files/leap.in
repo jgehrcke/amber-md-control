@@ -1,0 +1,45 @@
+# set log file
+logfile leap.log
+
+source leaprc.GLYCAM_06h
+source leaprc.GLYCAM_06h.sergeylibs
+source leaprc.ff12SB
+
+r=loadpdb final_receptor_state.pdb
+l=loadpdb final_ligand_state.pdb
+
+# Connect IL-10 disulfide bonds.
+# 1) With 5-res N terminus
+#bond r.12.SG r.108.SG
+#bond r.62.SG r.114.SG
+#bond r.172.SG r.268.SG
+#bond r.222.SG r.274.SG
+# 2) Without N terminus
+bond r.7.SG r.103.SG
+bond r.57.SG r.109.SG
+bond r.162.SG r.258.SG
+bond r.212.SG r.264.SG
+
+# build complex
+c = combine {r l}
+
+# save unsolvated complex data (MMPBSA)
+saveamberparm c complex_unsolvated.prmtop complex_unsolvated.crd
+savepdb c leap_complex_unsolvated.pdb
+
+# ions (positive in this case, due to negative GAG), water....
+addions c Na+ 0
+addions c Cl- 0
+solvateoct c TIP3PBOX 8.0
+
+# save solvated complex data + ligand/receptor (MMPBSA)
+savepdb c leap_complex_solvated.pdb
+saveamberparm c top.prmtop initcoords.crd
+saveamberparm l ligand.prmtop ligand.crd
+savepdb l leap_ligand.pdb
+saveamberparm r receptor.prmtop receptor.crd
+savepdb r leap_receptor.pdb
+
+# because we do not like leap, we quit at this point
+quit
+
