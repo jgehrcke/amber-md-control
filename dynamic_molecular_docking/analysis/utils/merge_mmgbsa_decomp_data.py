@@ -95,6 +95,10 @@ def plot_top_residues(
     merged_data_sorted = merged_data.sort([('total_mean','mean')])
     print_N = 10
     plot_N = 6
+    if plot_N > len(merged_data_sorted):
+        # There might be less residues in the receptor/ligand than defined
+        # above. In this case deviate from the default.
+        plot_N = len(merged_data_sorted)
     log.info("Top %s of %s residues by averaged contribution to binding:\n%s",
         print_N, reclig, merged_data_sorted.head(print_N)['total_mean'])
     df_for_plot = merged_data_sorted.head(plot_N)
