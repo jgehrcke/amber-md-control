@@ -131,14 +131,28 @@ if [ -r ${PROD_OUTFILE} ]; then
         exit
     fi
 fi
+
+# Childish lock, cause Lustre on Taurus/ZIH does not support flock:
+# Problem: lock is maintained when script crashes. Still, better do
+# manually delete some lock files than having two concurrent
+# simulation processes.
+if [ -f "_lockfile" ]; then
+    echo "_lockfile exists. Exit."
+    exit
+fi
+
 # http://mywiki.wooledge.org/BashFAQ/045
 exec 200> _lockfile
     if ! flock -n 200 ; then
         echo "Could not acquire lock. Another instance is running here. Exit.";
         exit
+    else
+        echo "Successfully acquired lock!"
     fi
 # This now runs under the lock until 200 is closed (it 
 # will be closed automatically when the script ends).
+
+
 
 echo "heatup duration: ${HEATUP_TIME_NS} ns, time steps: ${HEATUP_TIME_STEPS}"
 echo "equi duration: ${EQUI_TIME_NS} ns, time steps: ${EQUI_TIME_STEPS}"
@@ -439,3 +453,5 @@ if [ $? != 0 ]; then
     exit 1
 fi
 echo "Production finished."
+rm -f _lockfile
+
