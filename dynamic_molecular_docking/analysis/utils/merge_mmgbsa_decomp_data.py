@@ -29,6 +29,7 @@ options = None
 def main():
     global options
     parser = argparse.ArgumentParser()
+    parser.add_argument('--receptor-resnum-offset', type=int, default=0)
     parser.add_argument('outdir')
     parser.add_argument('binding_data_file', metavar='binding-data-file', )
     options = parser.parse_args()
@@ -114,9 +115,14 @@ def plot_top_residues(
         color='black',
         marker='o', mfc='black',
         markersize=7, capsize=7)
+
     # Dataframe index contains the location names, build proper strings.
-    residue_names = [
-        "_".join(loc.split()[1:]) for loc in df_for_plot.index.values]
+    def loc_to_resname(loc):
+        r_or_l, name, number = loc.split()
+        if r_or_l == "L":
+            return "%s %s" % (name, number)
+        return "%s %s" % (name, options.receptor_resnum_offset + int(number))
+    residue_names = [loc_to_resname(loc) for loc in df_for_plot.index.values]
     plt.xticks(
         range(plot_N),
         residue_names,
