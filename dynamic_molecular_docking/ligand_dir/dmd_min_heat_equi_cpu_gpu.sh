@@ -364,3 +364,7 @@ if [ $? != 0 ]; then
 fi
 echo "Equilibration finished."
 
+echo "Running distance measure script (for writing tMD restraint file)"
+./read_distance_create_rest_file.sh
+
+
