@@ -118,6 +118,29 @@ PRODPREFIX="production_NVT"
 PRODINFILE="${PRODPREFIX}.in"
 
 
+# Lustre on Taurus/ZIH does not support remote (cluster-wide) flock.
+# HOME on Taurus does support (remote) flock.
+# So, create lockfile in home instead of on scratch filesystem.
+LOCKFILENAME="$(generate_lock_filename_homedir)"
+echo "LOCKFILENAME: '${LOCKFILENAME}'"
+# http://mywiki.wooledge.org/BashFAQ/045
+exec 87>"$LOCKFILENAME"
+if ! flock --nonblock --exclusive 87; then
+    echo "Could not acquire lock. Another instance is running here. Exit.";
+    exit 1
+else
+    echo "Successfully acquired lock!"
+fi
+# This now runs under the lock until 87 is closed (it
+# will be closed automatically when the script ends).
+# For the matter for cleaning up, the lockfile is removed
+# at the end of the script.
+
+
+echo "heatup duration: ${HEATUP_TIME_NS} ns, time steps: ${HEATUP_TIME_STEPS}"
+echo "equi duration: ${EQUI_TIME_NS} ns, time steps: ${EQUI_TIME_STEPS}"
+echo "prod duration: ${PROD_TIME_NS} ns, time steps: ${PROD_TIME_STEPS}"
+
 # In case of free MD production, an unwanted overwrite is uncool.
 # Also, multiple jobs working on the same should be prevented.
 # Implement some mechanisms against this.
@@ -132,31 +155,6 @@ if [ -r ${PROD_OUTFILE} ]; then
     fi
 fi
 
-# Childish lock, cause Lustre on Taurus/ZIH does not support flock:
-# Problem: lock is maintained when script crashes. Still, better do
-# manually delete some lock files than having two concurrent
-# simulation processes.
-if [ -f "_lockfile" ]; then
-    echo "_lockfile exists. Exit."
-    exit
-fi
-
-# http://mywiki.wooledge.org/BashFAQ/045
-exec 200> _lockfile
-    if ! flock -n 200 ; then
-        echo "Could not acquire lock. Another instance is running here. Exit.";
-        exit
-    else
-        echo "Successfully acquired lock!"
-    fi
-# This now runs under the lock until 200 is closed (it 
-# will be closed automatically when the script ends).
-
-
-
-echo "heatup duration: ${HEATUP_TIME_NS} ns, time steps: ${HEATUP_TIME_STEPS}"
-echo "equi duration: ${EQUI_TIME_NS} ns, time steps: ${EQUI_TIME_STEPS}"
-echo "prod duration: ${PROD_TIME_NS} ns, time steps: ${PROD_TIME_STEPS}"
 
 RESTRAINTS_FILE="dmd_freemd.rest"
 if [ -f ${RESTRAINTS_FILE} ]; then
@@ -454,4 +452,5 @@ if [ $? != 0 ]; then
 fi
 echo "Production finished."
 rm -f _lockfile
+rm -f "$LOCKFILENAME"
 

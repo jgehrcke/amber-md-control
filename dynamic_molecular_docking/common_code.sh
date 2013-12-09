@@ -55,3 +55,17 @@ check_command () {
         exit 1
     fi
     }
+
+generate_lock_filename_homedir () {
+    LOCKFILEDIR="${HOME}/dmd_lockfiles"
+    if [ ! -d "$LOCKFILEDIR" ]; then
+        mkdir "$LOCKFILEDIR"
+    fi
+    # Get full path of currently running script.
+    local FULLPATHDIR=$(cd $(dirname $0); pwd -P)
+    local FULLPATH="${FULLPATHDIR}/${0}"
+    # Replace slashes.
+    local FULLPATH_CLEANED=$(echo "$FULLPATH" | sed "s|/|-|g")
+    echo "${LOCKFILEDIR}/${FULLPATH_CLEANED}"
+    }
+
