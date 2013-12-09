@@ -45,3 +45,6 @@ time pmemd.cuda -O -i equilibrate_NPT.in -o equilibrate_NPT.out \
     -p top.prmtop -c equilibrate_NPT.rst.1 \
     -r equilibrate_NPT.rst -x equilibrate_NPT.mdcrd
 
+echo "Running distance measure script (for writing tMD restraint file)"
+./read_distance_create_rest_file.sh
+
