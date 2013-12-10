@@ -216,3 +216,4 @@ if [ $? != 0 ]; then
     exit 1
 fi
 echo "tMD finished."
+rm -f "$LOCKFILENAME"
