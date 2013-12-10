@@ -142,9 +142,6 @@ echo "equi duration: ${EQUI_TIME_NS} ns, time steps: ${EQUI_TIME_STEPS}"
 echo "prod duration: ${PROD_TIME_NS} ns, time steps: ${PROD_TIME_STEPS}"
 
 # In case of free MD production, an unwanted overwrite is uncool.
-# Also, multiple jobs working on the same should be prevented.
-# Implement some mechanisms against this.
-
 PROD_OUTFILE="${PRODPREFIX}.out"
 if [ -r ${PROD_OUTFILE} ]; then
     OUTFILE_FINISH=$(tail ${PROD_OUTFILE} -n 1 | grep "wall time")

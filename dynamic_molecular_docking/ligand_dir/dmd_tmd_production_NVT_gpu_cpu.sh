@@ -85,30 +85,23 @@ if [ ${PBS_JOBID+x} ]; then
 fi
 
 
-# From flock(1):
-# By default, if the lock cannot be immediately acquired, flock waits
-# until the lock is available. 
-
-# Obtain exclusive lock on file descriptor 200.
-(
-    echo "Trying to acquire lock... ($(date))"
-    flock -x 200
-    echo "Lock acquired ($(date))."
-    if [ ! -f ${TMD_RESTRAINT_FILE} ]; then
-        /bin/bash read_distance_create_rest_file.sh
-    fi
-) 200>"create_restraint_file.lock"
-rm -f create_restraint_file.lock
-
-# The above construct executes ( ... ) in a subshell in a child process.
-# The redirection is created first, i.e. the lock file is created first
-# and then the subshell is invoked. `flock -x` waits until lock can be 
-# acquired. The first process/job acquiring the lock will not find the
-# restraints file. It will call the read_distance_create_rest_file.sh
-# script. While this script runs, the lock is kept acquired and all other
-# jobs/processes wait on the `flock -x 200` line. In the moment the
-# lock becomes released, the restraint file exists and all processes
-# continue synchronized.
+# Lustre on Taurus/ZIH does not support remote (cluster-wide) flock.
+# HOME on Taurus does support (remote) flock.
+# So, create lockfile in home instead of on scratch filesystem.
+LOCKFILENAME="$(generate_lock_filename_homedir)"
+echo "LOCKFILENAME: '${LOCKFILENAME}'"
+# http://mywiki.wooledge.org/BashFAQ/045
+exec 87>"$LOCKFILENAME"
+if ! flock --nonblock --exclusive 87; then
+    echo "Could not acquire lock. Another instance is running here. Exit.";
+    exit 1
+else
+    echo "Successfully acquired lock!"
+fi
+# This now runs under the lock until 87 is closed (it
+# will be closed automatically when the script ends).
+# For the matter for cleaning up, the lockfile is removed
+# at the end of the script.
 
 check_required ${TMD_RESTRAINT_FILE}
 check_required ${EQUI_RESTART_FILE}
