@@ -1,4 +1,9 @@
-# set log file
+# by default, quit here. This file is required to be
+# adjusted to the system!
+EDITME
+quit
+
+set log file
 logfile leap.log
 
 source leaprc.GLYCAM_06h
