@@ -62,10 +62,10 @@ generate_lock_filename_homedir () {
         mkdir "$LOCKFILEDIR"
     fi
     # Get full path of currently running script.
-    local FULLPATHDIR=$(cd $(dirname $0); pwd -P)
-    local FULLPATH="${FULLPATHDIR}/${0}"
+    #local FULLPATHDIR=$(cd $(dirname $0); pwd -P)
+    #local FULLPATH="${FULLPATHDIR}/${0}"
     # Replace slashes.
-    local FULLPATH_CLEANED=$(echo "$FULLPATH" | sed "s|/|-|g")
+    local FULLPATH_CLEANED=$(echo "$(pwd)" | sed "s|/|-|g")
     echo "${LOCKFILEDIR}/${FULLPATH_CLEANED}"
     }
 

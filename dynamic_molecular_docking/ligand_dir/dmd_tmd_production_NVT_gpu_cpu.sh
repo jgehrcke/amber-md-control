@@ -84,6 +84,19 @@ if [ ${PBS_JOBID+x} ]; then
     echo "PBS_JOBID is set ('${PBS_JOBID}')"
 fi
 
+check_required ${TMD_RESTRAINT_FILE}
+check_required ${EQUI_RESTART_FILE}
+check_required ${TOPOLOGYFILE}
+if [ -d ${OUTDIR} ]; then
+    echo "Output directory '${OUTDIR}' already exists. Exit."
+    exit 1
+fi
+echo "Creating and entering output directory '${OUTDIR}'."
+mkdir ${OUTDIR} && cd ${OUTDIR}
+if [ $? != 0 ]; then
+    err "Error while creating/entering output directory. Exit."
+    exit 1
+fi
 
 # Lustre on Taurus/ZIH does not support remote (cluster-wide) flock.
 # HOME on Taurus does support (remote) flock.
@@ -102,23 +115,6 @@ fi
 # will be closed automatically when the script ends).
 # For the matter for cleaning up, the lockfile is removed
 # at the end of the script.
-
-check_required ${TMD_RESTRAINT_FILE}
-check_required ${EQUI_RESTART_FILE}
-check_required ${TOPOLOGYFILE}
-
-if [ -d ${OUTDIR} ]; then
-    echo "Output directory '${OUTDIR}' already exists. Exit."
-    exit 1
-fi
-echo "Creating and entering output directory '${OUTDIR}'."
-
-mkdir ${OUTDIR} && cd ${OUTDIR}
-
-if [ $? != 0 ]; then
-    err "Error while creating/entering output directory. Exit."
-    exit 1
-fi
 
 echo "Linking required files to current working directory: $PWD"
 
