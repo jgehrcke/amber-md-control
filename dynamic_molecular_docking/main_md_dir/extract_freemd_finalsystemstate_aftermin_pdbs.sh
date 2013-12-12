@@ -11,10 +11,16 @@ if [ ! -f "$ABSPATH_TO_SCRIPT" ]; then
     exit 1
 fi
 
-# Set up environment (Amber, Python, ...).
-if [ -f "./env_setup.sh" ]; then
-    source "./env_setup.sh"
+
+MD_DIR="."
+# Set up environment (Amber, Python, ...), exit upon error.
+if [[ -f "${MD_DIR}/env_setup.sh" ]]; then
+    source "${MD_DIR}/env_setup.sh"
+else
+    echo "file missing: ${MD_DIR}/env_setup.sh"
+    exit 1
 fi
+
 
 echo "Execute script for each finished freeMD: ${ABSPATH_TO_SCRIPT}"
 

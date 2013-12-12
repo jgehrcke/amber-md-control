@@ -2,18 +2,19 @@
 # Copyright 2012-2014 Jan-Philip Gehrcke, BIOTEC, TU Dresden
 # http://gehrcke.de
 
-
-MD_DIR="."
-# Set up environment (Amber, Python, ...), exit upon error.
-if [[ -f "${MD_DIR}/env_setup.sh" ]]; then
-    source "${MD_DIR}/env_setup.sh"
-else
-    echo "file missing: ${MD_DIR}/env_setup.sh"
-    exit 1
+# If DMD environment has been set up before, don't repeat.
+if [[ -z ${DMD_CODE_DIR} ]]; then
+    MD_DIR="."
+    # Set up environment (Amber, Python, ...), exit upon error.
+    if [[ -f "${MD_DIR}/env_setup.sh" ]]; then
+        source "${MD_DIR}/env_setup.sh"
+    else
+        echo "file missing: ${MD_DIR}/env_setup.sh"
+        exit 1
+    fi
+    # Now, DMD_CODE_DIR is defined.
 fi
-# Now, DMD_CODE_DIR is defined.
 source "${DMD_CODE_DIR}/common_code.sh"
-
 
 set +u
 if [[ "$1" == "--finished-only" ]];then

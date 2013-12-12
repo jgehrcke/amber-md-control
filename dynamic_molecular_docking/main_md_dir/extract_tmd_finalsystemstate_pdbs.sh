@@ -19,13 +19,17 @@ STARTDIR="$PWD"
 SCRIPT_TO_EXECUTE="./trajframe_to_pdb_using_stripmask.sh"
 ABSPATH_TO_SCRIPT=$(readlink -f ${SCRIPT_TO_EXECUTE})
 
-# Set up environment (Amber, Python, ...).
-if [ -f "./env_setup.sh" ]; then
-    source "./env_setup.sh"
+MD_DIR="."
+# Set up environment (Amber, Python, ...), exit upon error.
+if [[ -f "${MD_DIR}/env_setup.sh" ]]; then
+    source "${MD_DIR}/env_setup.sh"
+else
+    echo "file missing: ${MD_DIR}/env_setup.sh"
+    exit 1
 fi
 
-echo "Execute script for each finished tMD: ${ABSPATH_TO_SCRIPT}"
 
+echo "Execute script for each finished tMD: ${ABSPATH_TO_SCRIPT}"
 ./find_unfinished_tmd_trajectories.sh --finished-only | while read TMDDIR
 do
     cd "$TMDDIR"
