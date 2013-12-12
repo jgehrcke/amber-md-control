@@ -1,33 +1,24 @@
 #!/bin/bash
-#
-#   Copyright (C) 2012 Jan-Philip Gehrcke
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
-#
+# Copyright 2012-2014 Jan-Philip Gehrcke, BIOTEC, TU Dresden
+# http://gehrcke.de
 
 
-#set -e
+MD_DIR="."
+# Set up environment (Amber, Python, ...), exit upon error.
+if [[ -f "${MD_DIR}/env_setup.sh" ]]; then
+    source "${MD_DIR}/env_setup.sh"
+else
+    echo "file missing: ${MD_DIR}/env_setup.sh"
+    exit 1
+fi
+# Now, DMD_CODE_DIR is defined.
+source "${DMD_CODE_DIR}/common_code.sh"
 
-test_number() {
-    if ! [[ "${1}" =~ ^[0-9]+$ ]] ; then
-        err "Not a number: '${1}'. Exit."
-        exit 1
-    fi
-    }
 
 FINISHEDONLY=false
 STARTEDONLY=false
 CHECKMINFRAMES=false
+set +u
 if [[ "$1" == "--finished-only" ]]; then
     FINISHEDONLY=true
 elif [[ "$1" == "--started-only" ]]; then
@@ -35,14 +26,10 @@ elif [[ "$1" == "--started-only" ]]; then
 elif [[ "$1" == "--minframes" ]]; then
     CHECKMINFRAMES=true
     MINFRAMES="$2"
-    test_number "${MINFRAMES}"    
+    test_number "${MINFRAMES}"
 fi
+set -u
 
-
-err() {
-    # Print error message to stderr.
-    echo "ERROR >>> $@" 1>&2
-    }
 
 log() {
     if $FINISHEDONLY || $STARTEDONLY || $CHECKMINFRAMES; then
@@ -117,7 +104,16 @@ for LIGDIR in ligand_*; do
                 cd ../../ ; continue
             fi
         fi
-        log "${FRAMECOUNTACTUAL} frames."
+        LOCKFILENAME="$(generate_lock_filename_homedir)"
+        # http://mywiki.wooledge.org/BashFAQ/045
+        exec 87>"$LOCKFILENAME"
+        if ! flock --nonblock --exclusive 87; then
+            LOCKSTATE="LOCKED (running)"
+        else
+            LOCKSTATE="not locked (not running)"
+            rm -rf "$LOCKFILENAME"
+        fi
+        log "${FRAMECOUNTACTUAL} frames, ${LOCKSTATE}"
         cd ../../ ;
     done;
     cd ..;
