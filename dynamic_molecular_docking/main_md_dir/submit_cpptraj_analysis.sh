@@ -3,7 +3,7 @@
 # http://gehrcke.de
 
 STARTDIR="$PWD"
-BATCH_SYSTEM""
+BATCH_SYSTEM=""
 
 for i in "$@"
 do
