@@ -66,6 +66,14 @@ do
         elif [[ "$BATCH_SYSTEM" == "lsf" ]]; then
             echo "Not implemented for LSF. Exit."
             exit 1
+        elif [[ "$BATCH_SYSTEM" == "torque" ]]; then
+            if [ -z "$NBR_CPUS" ]; then
+                echo "Submit for GPU (local Torque cluster)."
+                submit-gpu-job "/bin/bash ${ABSPATH_TO_SCRIPT} top.prmtop production_NVT.rst" -o "torque_final_state_minimization_gpu.outerr"
+            else
+                echo "Torque requires GPU (NBR_CPUs not set). Exit."
+                exit 1
+            fi
         elif [[ "$BATCH_SYSTEM" == "slurm" ]]; then
             if [ -z "$NBR_CPUS" ]; then
                 echo "Submit for GPU."
