@@ -27,8 +27,7 @@ if [ -z "$BATCH_SYSTEM" ]; then
     exit 1
 fi
 
-RUNSCRIPT='
-#!/bin/bash
+RUNSCRIPT='#!/bin/bash
 ./analyze_freemd_cpptraj_dihedrals_all_freemd_dirs.sh >dihedrals.out  2>dihedrals.err &
 ./analyze_freemd_cpptraj_movement_all_freemd_dirs.sh >movement.out 2>movement.err &
 ./analyze_freemd_cpptraj_hbonds_all_freemd_dirs.sh >hbonds.out 2>hbonds.err
