@@ -33,11 +33,21 @@ fi
 
 LAST_N=250
 
+if [ -r resnum_offset ]; then
+    log "Found resnum_offset file."
+    RESNUMOFFSET=$(cat resnum_offset)
+else
+    RESNUMOFFSET="0"
+fi
+
 # Analyze cpptraj's hbond AVGOUT files.
 # During this analysis, hbond data among all DMD runs are merged.
 # This creates various output files in $OUT_DIR_MERGED_DATA.
 log "Collecting cpptraj's AVGOUT files and merging data..."
-find "$MD_DIR" -name "hbonds_rec_lig_average_last_${LAST_N}.dat" | python utils/analyze_hbond_avgout.py "${OUT_DIR_MERGED_DATA}/freemd_last${LAST_N}frames"
+find "$MD_DIR" -name "hbonds_rec_lig_average_last_${LAST_N}.dat" | \
+    python utils/analyze_hbond_avgout.py \
+    --receptor-resnum-offset "${RESNUMOFFSET}" \
+    "${OUT_DIR_MERGED_DATA}/freemd_last${LAST_N}frames"
 
 # Analyze cpptraj's hbond OUT files.
 # Creates measures for each DMD run.

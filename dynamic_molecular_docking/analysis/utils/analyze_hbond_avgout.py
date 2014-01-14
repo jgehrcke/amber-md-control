@@ -8,6 +8,7 @@ import sys
 import logging
 from collections import defaultdict
 from itertools import izip
+import argparse
 
 import pandas as pd
 import numpy as np
@@ -26,7 +27,13 @@ RESIDUE_PAIR_FRACTIONS = defaultdict(list)
 
 
 def main():
-    output_dir = sys.argv[1]
+    global options
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--receptor-resnum-offset', type=int, default=0)
+    parser.add_argument('outdir')
+    options = parser.parse_args()
+
+    output_dir = options.outdir
     if os.path.exists(output_dir):
         sys.exit("Already exists: %s" % output_dir)
 
@@ -37,10 +44,7 @@ def main():
     fh.setLevel(logging.DEBUG)
     log.addHandler(fh)
 
-    if len(sys.argv) > 2:
-        filepaths = sys.argv[2:]
-    else:
-        filepaths = (l.strip() for l in sys.stdin)
+    filepaths = (l.strip() for l in sys.stdin)
 
     nbr_processed_data_sets = 0
     for idx, fp in enumerate(filepaths):
@@ -53,6 +57,12 @@ def main():
 
     log.info("Processed %s data sets (files)." % nbr_processed_data_sets)
     evaluate_plot_data(nbr_processed_data_sets, output_dir)
+
+
+# Quick'n'dirty residue name converter (implement numbering offset).
+def loc_to_resname(loc):
+    name, number = loc.split("_")
+    return "%s_%s" % (name, options.receptor_resnum_offset + int(number))
 
 
 def evaluate_plot_data(nbr_processed_data_sets, output_dir):
@@ -202,6 +212,8 @@ def process_single_avgout_file(hbond_cpptraj_avgout_filepath):
     for acceptor, donor, fraction in izip(df['#Acceptor'], df.Donor, df.Frac):
         # split ARG_107@NH1
         donor_resname = donor.split("@")[0]
+        # Implment numbering offset.
+        donor_resname = loc_to_resname(donor_resname)
         acceptor_resname = acceptor.split("@")[0]
         donac_string = "%s-%s" % (donor_resname, acceptor_resname)
         receptor_residue_fractions_singlefile[donor_resname].append(fraction)
@@ -219,3 +231,4 @@ def process_single_avgout_file(hbond_cpptraj_avgout_filepath):
 
 if __name__ == "__main__":
     main()
+
