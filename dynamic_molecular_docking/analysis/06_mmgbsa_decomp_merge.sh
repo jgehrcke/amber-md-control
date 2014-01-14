@@ -34,12 +34,20 @@ fi
 LAST_N=250
 PROJECTNAME="mmgbsa_decomp_last${LAST_N}frames"
 
+if [ -r resnum_offset ]; then
+    log "Found resnum_offset file."
+    RESNUMOFFSET=$(cat resnum_offset)
+else
+    RESNUMOFFSET="0"
+fi
+
 # Analyze FINAL_DECOMP_MMPBSA.dat files as written by MMPBSA.py from AT 13.
 # During this analysis, decomp data among all DMD runs are merged.
 # This creates various output files in $OUT_DIR_MERGED_DATA.
 log "Collecting decomp data files and merging data..."
 find "$MD_DIR" -wholename "*/${PROJECTNAME}/FINAL_DECOMP_MMPBSA.dat" | \
     python utils/merge_mmgbsa_decomp_data.py \
+        --receptor-resnum-offset "${RESNUMOFFSET}" \
         "${OUT_DIR_MERGED_DATA}/${PROJECTNAME}" \
         "${OUT_DIR_PER_RUN_DATA}/mmpbsa_freemd_last${LAST_N}frames.dat"
 exit
