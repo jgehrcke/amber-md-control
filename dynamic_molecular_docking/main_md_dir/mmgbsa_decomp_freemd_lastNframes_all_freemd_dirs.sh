@@ -1,12 +1,12 @@
 #!/bin/bash
-# Copyright 2012-2013 Jan-Philip Gehrcke, BIOTEC, TU Dresden
+# Copyright 2012-2014 Jan-Philip Gehrcke, BIOTEC, TU Dresden
 # http://gehrcke.de
 
 STARTDIR="$PWD"
 SCRIPT_TO_EXECUTE="./mmgbsa_decomp_freemd_lastNframes.sh"
 ABSPATH_TO_SCRIPT=$(readlink -f ${SCRIPT_TO_EXECUTE})
 
-BATCH_SYSTEM""
+BATCH_SYSTEM=""
 DRYRUN=false
 
 for i in "$@"
@@ -61,12 +61,12 @@ do
             exit 1
         elif [[ "$BATCH_SYSTEM" == "slurm" ]]; then
             #echo "Not implemented for Slurm. Exit."
-            sbatch  --ntasks ${NBR_CPUS} --nodes 1 --cpus-per-task 1 --partition mpi2 \
+            sbatch  --ntasks ${NBR_CPUS} --nodes 1 --cpus-per-task 1 --partition sandy \
                 --mem-per-cpu 2000 \
                 --time 1:00:00 \
                 --output 'slurm_mmgbsa_mpi_%j.outerr' \
                 --error 'slurm_mmgbsa_mpi_%j.outerr' \
-                ${ABSPATH_TO_SCRIPT} ${NBR_CPUS}            
+                ${ABSPATH_TO_SCRIPT} ${NBR_CPUS}
         else
             echo "Batch system $BATCH_SYSTEM not known. Exit."
             exit 1

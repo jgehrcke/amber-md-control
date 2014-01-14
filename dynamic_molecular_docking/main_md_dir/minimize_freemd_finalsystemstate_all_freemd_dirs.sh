@@ -58,11 +58,22 @@ do
     # gpu/cpu args of minimization script.
     if [[ $BATCH_SYSTEM != "" ]]; then
         if [[ "$BATCH_SYSTEM" == "sge" ]]; then
-            echo "Not implemented. Exit."
-            exit 1
+                test_number "$NBR_CPUS"
+                echo "Submit on SGE for $NBR_CPUS CPUs."
+                qsub -pe smp 4 -cwd -V -q bioinfp.q -b yes \
+                    -o biocluster_final_state_min.log -j y \
+                    "/bin/bash ${ABSPATH_TO_SCRIPT} top.prmtop production_NVT.rst ${NBR_CPUS} cpu"
         elif [[ "$BATCH_SYSTEM" == "lsf" ]]; then
             echo "Not implemented for LSF. Exit."
             exit 1
+        elif [[ "$BATCH_SYSTEM" == "torque" ]]; then
+            if [ -z "$NBR_CPUS" ]; then
+                echo "Submit for GPU (local Torque cluster)."
+                submit-gpu-job "/bin/bash ${ABSPATH_TO_SCRIPT} top.prmtop production_NVT.rst" -o "torque_final_state_minimization_gpu.outerr"
+            else
+                echo "Torque requires GPU (NBR_CPUs not set). Exit."
+                exit 1
+            fi
         elif [[ "$BATCH_SYSTEM" == "slurm" ]]; then
             if [ -z "$NBR_CPUS" ]; then
                 echo "Submit for GPU."
@@ -73,8 +84,8 @@ do
                     ${ABSPATH_TO_SCRIPT} top.prmtop production_NVT.rst
             else
                 test_number "$NBR_CPUS"
-                echo "Submit for $NBR_CPUS CPUs."
-                sbatch  --ntasks "${NBR_CPUS}" --ntasks-per-node "${NBR_CPUS}" --partition mpi2 \
+                echo "Submit on SLURM for $NBR_CPUS CPUs."
+                sbatch  --ntasks "${NBR_CPUS}" --ntasks-per-node "${NBR_CPUS}" --partition sandy \
                     --mem-per-cpu 2000 \
                     --time 0:30:00 \
                     --output 'slurm_final_state_minimization_cpu_%j.outerr' \
