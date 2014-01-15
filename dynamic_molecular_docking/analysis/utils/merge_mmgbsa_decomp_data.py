@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright 2012-2013 Jan-Philip Gehrcke, BIOTEC, TU Dresden
+# Copyright 2012-2014 Jan-Philip Gehrcke, BIOTEC, TU Dresden
 # http://gehrcke.de
 
 import os
