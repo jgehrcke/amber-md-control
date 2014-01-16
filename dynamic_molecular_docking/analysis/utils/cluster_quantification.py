@@ -106,6 +106,7 @@ def create_histogram_for_metric(data, metric, unit, cluster_run_ids):
     # Bin data, yielding
     #   `histvalues`: the number of items per bin (left to right)
     #   `binedges`: the edges of bins (left to right, len(bins)+1 elements)
+    N_values = len(data[metric])
     histvalues, binedges = np.histogram(data[metric], bins=OPTIONS.bins)
     # Calculate properties for later plotting.
     width = 1.0 * (binedges[1] - binedges[0])
@@ -148,9 +149,11 @@ def create_histogram_for_metric(data, metric, unit, cluster_run_ids):
         width=width,
         color=colors)
     t = "distribution of X in DMD solution ensemble (bins containing cluster values: red)\n"
-    t += "clusterdir: %s, size: %s" % (os.path.basename(os.path.normpath(
-        OPTIONS.clusterdir)), len(cluster_run_ids))
-    plt.title(t, fontsize=12)
+    t += "ensemble size: %s, cluster dir: '%s', cluster size: %s" % (
+        N_values,
+        os.path.basename(os.path.normpath(OPTIONS.clusterdir)),
+        len(cluster_run_ids))
+    plt.title(t, fontsize=11)
     mean = np.mean(clusterdatavalues)
     std = np.std(clusterdatavalues)
     unitstring = "[%s]" % unit if unit != 1 else ""
