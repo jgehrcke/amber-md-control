@@ -5,6 +5,9 @@
 
 python merge_per_run_data.py
 python evaluate_merged_data.py per_run_data_merged.dat
+python extract_top_solutions.py \
+    per_run_data_merged.dat \
+    system_state_pdb_files/freemd_final_states_aftermin_recaligned_ligandonly
 
 
 
