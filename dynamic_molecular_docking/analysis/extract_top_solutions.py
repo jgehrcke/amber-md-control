@@ -15,6 +15,7 @@ import glob
 import pandas as pd
 import numpy as np
 
+
 # Extract top solutions by MMPBSA, hbonds, ... bla bla
 # Create directory 'top_solutions'
 # Create subdirectories by criterion (e.g. "mmpbsa", ...)
@@ -27,7 +28,9 @@ logging.basicConfig(
 log = logging.getLogger()
 log.setLevel(logging.DEBUG)
 
+
 OPTIONS = None
+
 
 def main():
     global OPTIONS
@@ -102,10 +105,6 @@ def copy_pdbfiles_to_topdir(run_ids, metric_name, pdbpaths):
         target_filepath = os.path.join(target_dir, os.path.basename(p))
         log.debug("Copy '%s' to '%s'", p, target_filepath)
         shutil.copy(p, target_filepath)
-
-
-
-
 
 
 if __name__ == "__main__":
