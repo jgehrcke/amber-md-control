@@ -107,7 +107,15 @@ def create_histogram_for_metric(data, metric, unit, cluster_run_ids):
     #   `histvalues`: the number of items per bin (left to right)
     #   `binedges`: the edges of bins (left to right, len(bins)+1 elements)
     N_values = len(data[metric])
+    log.debug("N data values: %s", N_values)
+    #log.debug("data: %s", data[metric])
+    if np.nan in data[metric]:
+        log.error("Data series contains NaN value.")
+        sys.exit(1)
+    log.debug("data[%s] min: %.3f", metric, np.min(data[metric]))
+    log.debug("data[%s] max: %.3f", metric, np.max(data[metric]))
     histvalues, binedges = np.histogram(data[metric], bins=OPTIONS.bins)
+    log.debug("Histogram (counts): %s", histvalues)
     # Calculate properties for later plotting.
     width = 1.0 * (binedges[1] - binedges[0])
     centers = (binedges[:-1] + binedges[1:]) / 2
@@ -120,8 +128,10 @@ def create_histogram_for_metric(data, metric, unit, cluster_run_ids):
     # >>> bins = [0,20,40,60,80,100]
     # >>> np.digitize(my_list,bins)
     # array([1, 1, 3, 1, 2, 1, 1, 5, 1, 1, 1])
+
+    # https://github.com/numpy/numpy/issues/4217
+    binedges[-1] += 10**-5
     bin_indices = np.digitize(clusterdatavalues, binedges)
-    log.debug("cluster_bin_indices: %s", bin_indices)
 
     # Create a list of colors, same length as histvalues. One color for each
     # histogram bar. Use a default color (blue) and a special color for those
@@ -140,6 +150,7 @@ def create_histogram_for_metric(data, metric, unit, cluster_run_ids):
     colors = ["blue" for _ in histvalues]
     for specialbin in bin_indices:
         colors[specialbin] = "red"
+    log.debug("Color array: %s", colors)
 
     fig = plt.figure()
     plt.bar(
