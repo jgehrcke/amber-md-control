@@ -45,3 +45,5 @@ for DIR in *; do
     fi
 done
 
+cd ..
+
