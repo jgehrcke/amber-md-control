@@ -110,8 +110,9 @@ def create_histogram_for_metric(data, metric, unit, cluster_run_ids):
     log.debug("N data values: %s", N_values)
     #log.debug("data: %s", data[metric])
     if np.any(pd.isnull(data[metric])):
-        log.error("Data contains invalid data value(s) (NaN, None, inf, ...).")
-        sys.exit(1)
+        log.warning("Data contains invalid value(s) (NaN, None, inf, ...).")
+        log.debug("data: %s", data[metric])
+        #sys.exit(1)
     log.debug("data[%s] min: %.3f", metric, np.min(data[metric]))
     log.debug("data[%s] max: %.3f", metric, np.max(data[metric]))
     histvalues, binedges = np.histogram(data[metric], bins=OPTIONS.bins)
