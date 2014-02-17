@@ -36,7 +36,7 @@ cluster-pdb-structures --cluster-dir-prefix "dbscan_minp4_eps3" \
     --clean-directories --not-interactive \
     ../system_state_pdb_files/freemd_final_states_aftermin_recaligned_ligandonly/*.pdb
 
-for DIR in *; do
+for DIR in dbscan_*; do
     if [ ! -d "$DIR" ]; then
         continue
     fi

@@ -35,6 +35,7 @@ def main():
     parser.add_argument("--bins", type=int, default=20)
     parser.add_argument("--histogrampdffile",
         default="cluster_metrics_histograms.pdf")
+    parser.add_argument("--gfxoutdir")
     OPTIONS = parser.parse_args()
 
     if not os.path.isdir(OPTIONS.clusterdir):
@@ -42,6 +43,14 @@ def main():
 
     if not os.path.isfile(OPTIONS.perrundatafile):
         sys.exit("Not a file: %s" % OPTIONS.perrundatafile)
+
+    if OPTIONS.gfxoutdir is None:
+        OPTIONS.gfxoutdir = "hist_gfx_%s" % os.path.basename(OPTIONS.clusterdir)
+
+    try:            
+        os.makedirs(OPTIONS.gfxoutdir)
+    except OSError as e:
+        log.info("Did not create gfx out dir %s: %s", OPTIONS.gfxoutdir, e)
 
     run_ids = get_run_ids_for_cluster_structures(OPTIONS.clusterdir)
     create_histograms(run_ids)
@@ -176,6 +185,10 @@ def create_histogram_for_metric(data, metric, unit, cluster_run_ids):
         horizontalalignment='center')
     plt.xlabel("X (%s) %s" % (metric, unitstring))
     plt.ylabel("count")
+    if OPTIONS.gfxoutdir:
+        x = os.path.join(OPTIONS.gfxoutdir, metric)
+        plt.savefig(os.path.join("%s.pdf" % x))
+        plt.savefig(os.path.join("%s.png" % x), dpi=150)
     return fig
 
 
@@ -188,7 +201,11 @@ def run_id_from_filename(f):
     # '0001_26-freemd_finalstate_aftermin_aligned_ligand.pdb'
     run_id= f.split("-")[0]
     # Some validation
-    a, b = run_id.split("_")
+    try:
+        a, b = run_id.split("_")
+    except:
+        log.debug("run_id: %s", repr(run_id))
+        raise
     for s in (a, b):
         assert is_intstring(s)
     return run_id
