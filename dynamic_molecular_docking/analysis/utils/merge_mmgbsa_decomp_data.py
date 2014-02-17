@@ -68,7 +68,11 @@ def main():
             # as MM-PBSA deltaG.
             rid = run_id_from_path(filepath)
             decomp_data_frames[-1]._dmd_run_id = rid
-            decomp_data_frames[-1]._mmpbsa_deltag = mmpbsa_deltag[rid]
+            try:
+                decomp_data_frames[-1]._mmpbsa_deltag = mmpbsa_deltag[rid]
+            except KeyError:
+                log.error("Cannot retrieve dG for %s. Skip SRED data.", rid)
+                decomp_data_frames.pop()
     log.info("Proccessed %s input data files." % len(decomp_data_frames))
 
     log.info("Filter and merge data for receptor residues.")
