@@ -12,6 +12,9 @@ import argparse
 import pandas as pd
 import numpy as np
 import scipy.stats
+
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 
