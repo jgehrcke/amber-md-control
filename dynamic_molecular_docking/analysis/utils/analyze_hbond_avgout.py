@@ -12,8 +12,9 @@ import argparse
 
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-
 
 logging.basicConfig(
     format='%(asctime)s:%(msecs)05.1f  %(levelname)s: %(message)s',
@@ -24,6 +25,16 @@ log.setLevel(logging.INFO)
 
 RECEPTOR_RESIDUE_FRACTIONS = defaultdict(list)
 RESIDUE_PAIR_FRACTIONS = defaultdict(list)
+
+
+MPLFONT = {
+    'family': 'serif',
+    'serif': 'Liberation Serif',
+    'size': 10,
+    }
+
+
+matplotlib.rc('font', **MPLFONT)
 
 
 def main():
@@ -62,7 +73,37 @@ def main():
 # Quick'n'dirty residue name converter (implement numbering offset).
 def loc_to_resname(loc):
     name, number = loc.split("_")
-    return "%s_%s" % (name, options.receptor_resnum_offset + int(number))
+    shortname = RESNAMEMAP[name]
+    return "%s%s" % (shortname, options.receptor_resnum_offset + int(number))
+
+
+RESNAMEMAP = {
+    "ARG": "R",
+    "LYS": "K",
+    "ASN": "N",
+    "THR": "T",
+    "GLN": "Q",
+    "HIS": "H",
+    "GLY": "G",
+    "VAL": "V",
+    "ARG": "R",
+    "SER": "S",
+    "ASP": "D",
+    "HIE": "H",
+    "HIS": "H",
+    "TYR": "Y",
+    "HIS": "H",
+    "TRP": "W",
+    "PHE": "F",
+    "CYX": "C",
+    "CYS": "C",
+    "GLU": "E",
+    "ILE": "I",
+    "MET": "M",
+    "LEU": "L",
+    "PRO": "P",
+    "ALA": "A",
+    }
 
 
 def evaluate_plot_data(nbr_processed_data_sets, output_dir):
@@ -116,16 +157,21 @@ def evaluate_plot_data(nbr_processed_data_sets, output_dir):
         linewidth=1.5,
         color='black',
         marker='o', mfc='black',
-        markersize=10)
+        markersize=6)
+
+    fig = matplotlib.pyplot.gcf()
+    # Adjust to text width of LaTeX document.
+    fig.set_size_inches(4.67, 4.67*3.0/4)
+
     plt.xlim([-1, top])
     #plt.title("Normalized H-bond occupancy from %s trajectories" %
     #   nbr_processed_data_sets)
     plt.xticks(
         range(top),
         mpop_resnames,
-        rotation=45,
+        #rotation=45,
         fontsize=10)
-    plt.ylabel('Normalized H-bond occupancy')
+    plt.ylabel('Normalized hydrogen bond occupancy',)
     plt.xlabel('Residue')
     plt.tight_layout()
     p = os.path.join(output_dir, "normalized_occupancy_top.pdf")
@@ -137,14 +183,19 @@ def evaluate_plot_data(nbr_processed_data_sets, output_dir):
     # Now plot the same thing, but as boxplot indicating the distribution
     # leading to the mean values used above.
     plt.figure()
+
+    fig = matplotlib.pyplot.gcf()
+    # Adjust to text width of LaTeX document.
+    fig.set_size_inches(4.67, 4.67*3.0/4)
+
     plt.boxplot(mpop_fractions_lists)
     #plt.title("H-bond occupancy distribution from %s trajectories" % nbr_processed_data_sets)
     plt.xticks(
         range(1, top+1),
         mpop_resnames,
-        rotation=45,
+        #rotation=45,
         fontsize=10)
-    plt.ylabel('H-bond occupancy per trajectory')
+    plt.ylabel('Hydrogen bond occupancy per trajectory')
     plt.xlabel('Residue')
     plt.tight_layout()
     p = os.path.join(output_dir, "occupancy_boxplots_top.pdf")

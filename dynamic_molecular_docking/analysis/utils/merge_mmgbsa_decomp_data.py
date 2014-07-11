@@ -12,14 +12,54 @@ import argparse
 import pandas as pd
 import numpy as np
 import scipy.stats
-import matplotlib.pyplot as plt
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 logging.basicConfig(
     format='%(asctime)s:%(msecs)05.1f  %(levelname)s: %(message)s',
     datefmt='%H:%M:%S')
 log = logging.getLogger()
 log.setLevel(logging.DEBUG)
+
+
+MPLFONT = {
+    'family': 'serif',
+    'serif': 'Liberation Serif',
+    'size': 10,
+    }
+
+
+matplotlib.rc('font', **MPLFONT)
+
+RESNAMEMAP = {
+    "ARG": "R",
+    "LYS": "K",
+    "ASN": "N",
+    "THR": "T",
+    "GLN": "Q",
+    "HIS": "H",
+    "GLY": "G",
+    "VAL": "V",
+    "ARG": "R",
+    "SER": "S",
+    "ASP": "D",
+    "HIE": "H",
+    "HIS": "H",
+    "TYR": "Y",
+    "HIS": "H",
+    "TRP": "W",
+    "PHE": "F",
+    "CYX": "C",
+    "CYS": "C",
+    "GLU": "E",
+    "ILE": "I",
+    "MET": "M",
+    "LEU": "L",
+    "PRO": "P",
+    "ALA": "A",
+    }
 
 
 #BOUND_FILTER_DELTA_G_HIGHEST = -20
@@ -110,37 +150,41 @@ def plot_top_residues(
 
     log.info("Creating new figure.")
     fig = plt.figure()
+    
+    # Adjust to text width of LaTeX document.
+    fig.set_size_inches(4.67, 4.67*3.0/4)
+        
     plt.errorbar(
         x=range(plot_N),
         y=df_for_plot[('total_mean','mean')].values,
         yerr=df_for_plot[('total_mean','sem')].values,
         linestyle='None',
-        linewidth=1.5,
+        linewidth=1.1,
         color='black',
         marker='o', mfc='black',
-        markersize=7, capsize=7)
+        markersize=5, capsize=5)
 
     # Dataframe index contains the location names, build proper strings.
     def loc_to_resname(loc):
         r_or_l, name, number = loc.split()
         if r_or_l == "L":
             return "%s %s" % (name, number)
-        return "%s %s" % (name, options.receptor_resnum_offset + int(number))
+        shortname = RESNAMEMAP[name]
+        return "%s%s" % (shortname, options.receptor_resnum_offset + int(number))
     residue_names = [loc_to_resname(loc) for loc in df_for_plot.index.values]
     plt.xticks(
         range(plot_N),
         residue_names,
-        rotation=45,
-        fontsize=12)
+        #rotation=45
+        )
     plt.xlim([-1, plot_N])
-    plt.xlabel('%s residue' % reclig,  fontsize=16)
+    plt.xlabel('%s residue' % reclig)
     plt.ylabel(
-        u'$\\langle \mathrm{\Delta G} \\rangle$ [kcal/mol]',
-        fontsize=16)
+        u'$\\langle \mathrm{\Delta G} \\rangle$ [kcal/mol]')
     frac_percent = int(100 * BOUND_FILTER_DELTA_G_TOP_FRACTION)
-    plt.title(("MM-GBSA SRED (%s), averaged over %s DMD runs\n"
-        "(top %s %% of decomp data by MM-PBSA delta G)") % (
-        reclig, nbr_datasets_for_merge, frac_percent))
+    #plt.title(("MM-GBSA SRED (%s), averaged over %s DMD runs\n"
+    #    "(top %s %% of decomp data by MM-PBSA delta G)") % (
+    #    reclig, nbr_datasets_for_merge, frac_percent))
     plt.tight_layout()
     outfile_name_prefix = "%s_top%s_residues_of_top_%spercent_dmd_runs" % (
         reclig, plot_N, frac_percent)

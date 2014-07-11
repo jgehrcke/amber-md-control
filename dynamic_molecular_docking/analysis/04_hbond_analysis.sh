@@ -33,7 +33,7 @@ fi
 
 LAST_N=250
 
-if [ -r resnum_offset ]; then
+if [ -r "resnum_offset" ]; then
     log "Found resnum_offset file."
     RESNUMOFFSET=$(cat resnum_offset)
 else
