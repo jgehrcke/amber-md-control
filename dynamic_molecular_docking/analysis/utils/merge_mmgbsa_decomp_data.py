@@ -28,7 +28,7 @@ MPLFONT = {
     'family': 'serif',
     'serif': 'Liberation Serif',
     'size': 10,
-}
+    }
 
 
 matplotlib.rc('font', **MPLFONT)
@@ -159,10 +159,10 @@ def plot_top_residues(
         y=df_for_plot[('total_mean','mean')].values,
         yerr=df_for_plot[('total_mean','sem')].values,
         linestyle='None',
-        linewidth=1.5,
+        linewidth=1.1,
         color='black',
         marker='o', mfc='black',
-        markersize=7, capsize=7)
+        markersize=5, capsize=5)
 
     # Dataframe index contains the location names, build proper strings.
     def loc_to_resname(loc):
@@ -182,9 +182,9 @@ def plot_top_residues(
     plt.ylabel(
         u'$\\langle \mathrm{\Delta G} \\rangle$ [kcal/mol]')
     frac_percent = int(100 * BOUND_FILTER_DELTA_G_TOP_FRACTION)
-    plt.title(("MM-GBSA SRED (%s), averaged over %s DMD runs\n"
-        "(top %s %% of decomp data by MM-PBSA delta G)") % (
-        reclig, nbr_datasets_for_merge, frac_percent))
+    #plt.title(("MM-GBSA SRED (%s), averaged over %s DMD runs\n"
+    #    "(top %s %% of decomp data by MM-PBSA delta G)") % (
+    #    reclig, nbr_datasets_for_merge, frac_percent))
     plt.tight_layout()
     outfile_name_prefix = "%s_top%s_residues_of_top_%spercent_dmd_runs" % (
         reclig, plot_N, frac_percent)
