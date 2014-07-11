@@ -97,7 +97,9 @@ RESNAMEMAP = {
     "CYS": "C",
     "GLU": "E",
     "ILE": "I",
-    "MET": "M",    
+    "MET": "M",
+    "LEU": "L",
+    "PRO": "P",
     }
 
 

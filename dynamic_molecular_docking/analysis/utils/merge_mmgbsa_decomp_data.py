@@ -17,12 +17,46 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-
 logging.basicConfig(
     format='%(asctime)s:%(msecs)05.1f  %(levelname)s: %(message)s',
     datefmt='%H:%M:%S')
 log = logging.getLogger()
 log.setLevel(logging.DEBUG)
+
+
+MPLFONT = {
+    'family': 'serif',
+    'serif': 'Liberation Serif'}
+
+
+matplotlib.rc('font', **MPLFONT)
+
+RESNAMEMAP = {
+    "ARG": "R",
+    "LYS": "K",
+    "ASN": "N",
+    "THR": "T",
+    "GLN": "Q",
+    "HIS": "H",
+    "GLY": "G",
+    "VAL": "V",
+    "ARG": "R",
+    "SER": "S",
+    "ASP": "D",
+    "HIE": "H",
+    "HIS": "H",
+    "TYR": "Y",
+    "HIS": "H",
+    "TRP": "W",
+    "PHE": "F",
+    "CYX": "C",
+    "CYS": "C",
+    "GLU": "E",
+    "ILE": "I",
+    "MET": "M",
+    "LEU": "L",
+    "PRO": "P",
+    }
 
 
 #BOUND_FILTER_DELTA_G_HIGHEST = -20
@@ -128,12 +162,13 @@ def plot_top_residues(
         r_or_l, name, number = loc.split()
         if r_or_l == "L":
             return "%s %s" % (name, number)
-        return "%s %s" % (name, options.receptor_resnum_offset + int(number))
+        shortname = RESNAMEMAP[name]
+        return "%s%s" % (shortname, options.receptor_resnum_offset + int(number))
     residue_names = [loc_to_resname(loc) for loc in df_for_plot.index.values]
     plt.xticks(
         range(plot_N),
         residue_names,
-        rotation=45,
+        #rotation=45,
         fontsize=12)
     plt.xlim([-1, plot_N])
     plt.xlabel('%s residue' % reclig,  fontsize=16)
