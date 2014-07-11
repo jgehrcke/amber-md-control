@@ -26,7 +26,9 @@ log.setLevel(logging.DEBUG)
 
 MPLFONT = {
     'family': 'serif',
-    'serif': 'Liberation Serif'}
+    'serif': 'Liberation Serif',
+    'size': 10,
+}
 
 
 matplotlib.rc('font', **MPLFONT)
@@ -148,6 +150,10 @@ def plot_top_residues(
 
     log.info("Creating new figure.")
     fig = plt.figure()
+    
+    # Adjust to text width of LaTeX document.
+    fig.set_size_inches(4.67, 4.67*3.0/4)
+        
     plt.errorbar(
         x=range(plot_N),
         y=df_for_plot[('total_mean','mean')].values,
@@ -169,13 +175,12 @@ def plot_top_residues(
     plt.xticks(
         range(plot_N),
         residue_names,
-        #rotation=45,
-        fontsize=12)
+        #rotation=45
+        )
     plt.xlim([-1, plot_N])
-    plt.xlabel('%s residue' % reclig,  fontsize=16)
+    plt.xlabel('%s residue' % reclig)
     plt.ylabel(
-        u'$\\langle \mathrm{\Delta G} \\rangle$ [kcal/mol]',
-        fontsize=16)
+        u'$\\langle \mathrm{\Delta G} \\rangle$ [kcal/mol]')
     frac_percent = int(100 * BOUND_FILTER_DELTA_G_TOP_FRACTION)
     plt.title(("MM-GBSA SRED (%s), averaged over %s DMD runs\n"
         "(top %s %% of decomp data by MM-PBSA delta G)") % (
