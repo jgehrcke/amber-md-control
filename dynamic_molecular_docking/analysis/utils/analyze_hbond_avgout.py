@@ -29,7 +29,9 @@ RESIDUE_PAIR_FRACTIONS = defaultdict(list)
 
 MPLFONT = {
     'family': 'serif',
-    'serif': 'Liberation Serif'}
+    'serif': 'Liberation Serif',
+    'size': 10,
+    }
 
 
 matplotlib.rc('font', **MPLFONT)
@@ -155,7 +157,12 @@ def evaluate_plot_data(nbr_processed_data_sets, output_dir):
         linewidth=1.5,
         color='black',
         marker='o', mfc='black',
-        markersize=10)
+        markersize=6)
+
+    fig = matplotlib.pyplot.gcf()
+    # Adjust to text width of LaTeX document.
+    fig.set_size_inches(4.67, 4.67*3.0/4)
+
     plt.xlim([-1, top])
     #plt.title("Normalized H-bond occupancy from %s trajectories" %
     #   nbr_processed_data_sets)
@@ -164,7 +171,7 @@ def evaluate_plot_data(nbr_processed_data_sets, output_dir):
         mpop_resnames,
         #rotation=45,
         fontsize=10)
-    plt.ylabel('Normalized H-bond occupancy')
+    plt.ylabel('Normalized hydrogen bond occupancy',)
     plt.xlabel('Residue')
     plt.tight_layout()
     p = os.path.join(output_dir, "normalized_occupancy_top.pdf")
@@ -176,6 +183,11 @@ def evaluate_plot_data(nbr_processed_data_sets, output_dir):
     # Now plot the same thing, but as boxplot indicating the distribution
     # leading to the mean values used above.
     plt.figure()
+
+    fig = matplotlib.pyplot.gcf()
+    # Adjust to text width of LaTeX document.
+    fig.set_size_inches(4.67, 4.67*3.0/4)
+
     plt.boxplot(mpop_fractions_lists)
     #plt.title("H-bond occupancy distribution from %s trajectories" % nbr_processed_data_sets)
     plt.xticks(
@@ -183,7 +195,7 @@ def evaluate_plot_data(nbr_processed_data_sets, output_dir):
         mpop_resnames,
         #rotation=45,
         fontsize=10)
-    plt.ylabel('H-bond occupancy per trajectory')
+    plt.ylabel('Hydrogen bond occupancy per trajectory')
     plt.xlabel('Residue')
     plt.tight_layout()
     p = os.path.join(output_dir, "occupancy_boxplots_top.pdf")
