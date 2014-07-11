@@ -27,6 +27,14 @@ RECEPTOR_RESIDUE_FRACTIONS = defaultdict(list)
 RESIDUE_PAIR_FRACTIONS = defaultdict(list)
 
 
+MPLFONT = {
+    'family': 'serif',
+    'serif': 'Liberation Serif'}
+
+
+matplotlib.rc('font', **MPLFONT)
+
+
 def main():
     global options
     parser = argparse.ArgumentParser()
@@ -63,7 +71,34 @@ def main():
 # Quick'n'dirty residue name converter (implement numbering offset).
 def loc_to_resname(loc):
     name, number = loc.split("_")
-    return "%s_%s" % (name, options.receptor_resnum_offset + int(number))
+    shortname = RESNAMEMAP[name]
+    return "%s%s" % (shortname, options.receptor_resnum_offset + int(number))
+
+
+RESNAMEMAP = {
+    "ARG": "R",
+    "LYS": "K",
+    "ASN": "N",
+    "THR": "T",
+    "GLN": "Q",
+    "HIS": "H",
+    "GLY": "G",
+    "VAL": "V",
+    "ARG": "R",
+    "SER": "S",
+    "ASP": "D",
+    "HIE": "H",
+    "HIS": "H",
+    "TYR": "Y",
+    "HIS": "H",
+    "TRP": "W",
+    "PHE": "F",
+    "CYX": "C",
+    "CYS": "C",
+    "GLU": "E",
+    "ILE": "I",
+    "MET": "M",    
+    }
 
 
 def evaluate_plot_data(nbr_processed_data_sets, output_dir):
@@ -124,7 +159,7 @@ def evaluate_plot_data(nbr_processed_data_sets, output_dir):
     plt.xticks(
         range(top),
         mpop_resnames,
-        rotation=45,
+        #rotation=45,
         fontsize=10)
     plt.ylabel('Normalized H-bond occupancy')
     plt.xlabel('Residue')
@@ -143,7 +178,7 @@ def evaluate_plot_data(nbr_processed_data_sets, output_dir):
     plt.xticks(
         range(1, top+1),
         mpop_resnames,
-        rotation=45,
+        #rotation=45,
         fontsize=10)
     plt.ylabel('H-bond occupancy per trajectory')
     plt.xlabel('Residue')
