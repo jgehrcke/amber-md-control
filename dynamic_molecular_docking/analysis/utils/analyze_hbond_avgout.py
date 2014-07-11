@@ -100,6 +100,7 @@ RESNAMEMAP = {
     "MET": "M",
     "LEU": "L",
     "PRO": "P",
+    "ALA": "A",
     }
 
 
