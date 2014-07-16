@@ -178,11 +178,11 @@ def plot_top_residues(
         #rotation=45
         )
     plt.xlim([-1, plot_N])
-    
-    if residue_names[0] in RESNAMEMAP:
+    if residue_names[0][1].isdigit():
         # Define y limit (mainly for thesis plots, remove afterwards...).
-        # Do only for receptor (via RESNAMEMAP check hack).
-        plt.ylim([0, -16])
+        # Do only for receptor (via isdigit hack, cause ligand resnames are 3 letters).
+        print "JA KLAR IST DAS DABEI"
+        plt.ylim([-16, 0])
     plt.xlabel('%s residue' % reclig)
     plt.ylabel(
         u'$\\langle \mathrm{\Delta G} \\rangle$ [kcal/mol]')
