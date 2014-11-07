@@ -91,6 +91,7 @@ RESNAMEMAP = {
     "ASP": "D",
     "HIE": "H",
     "HIS": "H",
+    "HID": "H",
     "TYR": "Y",
     "HIS": "H",
     "TRP": "W",
