@@ -69,10 +69,30 @@ options = None
 def main():
     global options
     parser = argparse.ArgumentParser()
-    parser.add_argument('--receptor-resnum-offset', type=int, default=0)
+    parser.add_argument('--receptor-resnum-offset', default=0)
     parser.add_argument('outdir')
     parser.add_argument('binding_data_file', metavar='binding-data-file', )
     options = parser.parse_args()
+
+    options.receptor_resnum_reset = None
+    options.receptor_resnum_reset_offset = None
+    if options.receptor_resnum_offset:
+        tokens = options.receptor_resnum_offset.split("/")
+        if len(tokens) == 1:
+            options.receptor_resnum_offset = int(tokens[0])
+        elif len(tokens) != 3:
+            sys.exit("receptor-resnum-offset must be 1 or 3 tokens.")
+        else:
+            # Let normal offset be offset "A".
+            # From and including residue number `reset`, apply offset B.
+            options.receptor_resnum_offset = int(tokens[0])
+            options.receptor_resnum_reset = int(tokens[1])
+            options.receptor_resnum_reset_offset = int(tokens[2])
+
+    log.info("Resnum offset/reset/reset-offset: %s, %s, %s",
+        options.receptor_resnum_offset,
+        options.receptor_resnum_reset,
+        options.receptor_resnum_reset_offset)
 
     if os.path.exists(options.outdir):
         sys.exit("Output dir already exists: %s" % options.outdir)
@@ -164,13 +184,31 @@ def plot_top_residues(
         marker='o', mfc='black',
         markersize=5, capsize=5)
 
+
     # Dataframe index contains the location names, build proper strings.
     def loc_to_resname(loc):
         r_or_l, name, number = loc.split()
         if r_or_l == "L":
             return "%s %s" % (name, number)
+
+        oldnumber = int(number)
+
+        # Apply suffix only if reset has been specified.
+        suffix = ""
+        if options.receptor_resnum_reset:
+            if oldnumber < options.receptor_resnum_reset:
+                newnumber = oldnumber + options.receptor_resnum_offset
+                suffix = "a"
+            else:
+                newnumber = oldnumber + options.receptor_resnum_reset_offset
+                suffix = "b"
+        else:
+            newnumber = oldnumber + options.receptor_resnum_offset
+
         shortname = RESNAMEMAP[name]
-        return "%s%s" % (shortname, options.receptor_resnum_offset + int(number))
+        return "%s%s%s" % (shortname, newnumber, suffix)
+
+
     residue_names = [loc_to_resname(loc) for loc in df_for_plot.index.values]
     plt.xticks(
         range(plot_N),
