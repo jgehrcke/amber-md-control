@@ -45,9 +45,30 @@ matplotlib.rc('font', **MPLFONT)
 def main():
     global options
     parser = argparse.ArgumentParser()
-    parser.add_argument('--receptor-resnum-offset', type=int, default=0)
+    parser.add_argument('--receptor-resnum-offset', default=0)
     parser.add_argument('outdir')
     options = parser.parse_args()
+
+    options.receptor_resnum_reset = None
+    options.receptor_resnum_reset_offset = None
+    if options.receptor_resnum_offset:
+        tokens = options.receptor_resnum_offset.split("/")
+        if len(tokens) == 1:
+            options.receptor_resnum_offset = int(tokens[0])
+        elif len(tokens) != 3:
+            sys.exit("receptor-resnum-offset must be 1 or 3 tokens.")
+        else:
+            # Let normal offset be offset "A".
+            # From and including residue number `reset`, apply offset B.
+            options.receptor_resnum_offset = int(tokens[0])
+            options.receptor_resnum_reset = int(tokens[1])
+            options.receptor_resnum_reset_offset = int(tokens[2])
+
+    log.info("Resnum offset/reset/reset-offset: %s, %s, %s", 
+        options.receptor_resnum_offset,
+        options.receptor_resnum_reset,
+        options.receptor_resnum_reset_offset)
+
 
     output_dir = options.outdir
     if os.path.exists(output_dir):
@@ -77,9 +98,23 @@ def main():
 
 # Quick'n'dirty residue name converter (implement numbering offset).
 def loc_to_resname(loc):
-    name, number = loc.split("_")
-    shortname = RESNAMEMAP[name]
-    return "%s%s" % (shortname, options.receptor_resnum_offset + int(number))
+    name, oldnumber = loc.split("_")
+    oldnumber = int(oldnumber)
+
+    # Apply suffix only if reset has been specified.
+    suffix = ""
+    if options.receptor_resnum_reset:
+        if oldnumber < options.receptor_resnum_reset:
+            newnumber = oldnumber + options.receptor_resnum_offset
+            suffix = "a"
+        else:
+            newnumber = oldnumber + options.receptor_resnum_reset_offset
+            suffix = "b"        
+    else:
+        newnumber = oldnumber + options.receptor_resnum_offset
+
+    shortname = RESNAMEMAP[name] 
+    return "%s%s%s" % (shortname, newnumber, suffix)
 
 
 RESNAMEMAP = {
@@ -96,6 +131,7 @@ RESNAMEMAP = {
     "ASP": "D",
     "HIE": "H",
     "HIS": "H",
+    "HID": "H",
     "TYR": "Y",
     "HIS": "H",
     "TRP": "W",
