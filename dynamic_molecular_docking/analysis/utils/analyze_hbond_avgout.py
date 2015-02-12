@@ -26,11 +26,16 @@ log.setLevel(logging.INFO)
 RECEPTOR_RESIDUE_FRACTIONS = defaultdict(list)
 RESIDUE_PAIR_FRACTIONS = defaultdict(list)
 
+#MPLFONT = {
+#    'family': 'serif',
+#    'serif': 'Liberation Serif',
+#    'size': 10,
+#    }
+
 
 MPLFONT = {
-    'family': 'serif',
-    'serif': 'Liberation Serif',
-    'size': 10,
+    'family': 'sans-serif',
+    'size': 8,
     }
 
 
@@ -140,8 +145,11 @@ def evaluate_plot_data(nbr_processed_data_sets, output_dir):
     #print rec_residue_frac_normsums_ser
 
     # Extract data about most occupied/populated donor residues in receptor.
-    top = 6
+    top = 4
     mpop_resnames = rec_residue_frac_normsums_ser.index[:top]
+
+    print "top: %s" % mpop_resnames
+
     mpop_fractions_lists = [RECEPTOR_RESIDUE_FRACTIONS[n] for n in mpop_resnames]
     mpop_fractions_normsums = rec_residue_frac_normsums_ser[:top]
 
@@ -185,18 +193,28 @@ def evaluate_plot_data(nbr_processed_data_sets, output_dir):
     plt.figure()
 
     fig = matplotlib.pyplot.gcf()
+
     # Adjust to text width of LaTeX document.
     fig.set_size_inches(4.67, 4.67*3.0/4)
 
-    plt.boxplot(mpop_fractions_lists)
+    boxpl = plt.boxplot(mpop_fractions_lists)
+    plt.setp(boxpl['boxes'], color='black', lw=1.0)
+    plt.setp(boxpl['whiskers'], color='black', lw=1.0)
+    plt.setp(boxpl['medians'], color='gray')
+    plt.setp(boxpl['fliers'], color='black')
+    plt.setp(boxpl['caps'], color='black')
+    plt.setp(boxpl['medians'], color='gray')
+    
+
+
     #plt.title("H-bond occupancy distribution from %s trajectories" % nbr_processed_data_sets)
     plt.xticks(
         range(1, top+1),
         mpop_resnames,
         #rotation=45,
         fontsize=10)
-    plt.ylabel('Hydrogen bond occupancy per trajectory')
-    plt.xlabel('Residue')
+    plt.ylabel('Normalized H-bond occupancy per trajectory')
+    #plt.xlabel('Residue')
     plt.tight_layout()
     p = os.path.join(output_dir, "occupancy_boxplots_top.pdf")
     plt.savefig(p)
