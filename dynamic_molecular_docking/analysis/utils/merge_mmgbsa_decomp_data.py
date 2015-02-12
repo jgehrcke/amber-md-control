@@ -24,12 +24,16 @@ log = logging.getLogger()
 log.setLevel(logging.DEBUG)
 
 
-MPLFONT = {
-    'family': 'serif',
-    'serif': 'Liberation Serif',
-    'size': 10,
-    }
+#MPLFONT = {
+#    'family': 'serif',
+#    'serif': 'Liberation Serif',
+#    'size': 10,
+#    }
 
+MPLFONT = {
+    'family': 'sans-serif',
+    'size': 8,
+    }
 
 matplotlib.rc('font', **MPLFONT)
 
@@ -159,7 +163,7 @@ def plot_top_residues(
         reclig):
     merged_data_sorted = merged_data.sort([('total_mean','mean')])
     print_N = 10
-    plot_N = 6
+    plot_N = 4
     if plot_N > len(merged_data_sorted):
         # There might be less residues in the receptor/ligand than defined
         # above. In this case deviate from the default.
@@ -214,14 +218,15 @@ def plot_top_residues(
         range(plot_N),
         residue_names,
         #rotation=45
+        fontsize=10
         )
     plt.xlim([-1, plot_N])
     if residue_names[0][1].isdigit():
         # Define y limit (mainly for thesis plots, remove afterwards...).
         # Do only for receptor (via isdigit hack, cause ligand resnames are 3 letters).
         print "JA KLAR IST DAS DABEI"
-        plt.ylim([-16, 0])
-    plt.xlabel('%s residue' % reclig)
+        plt.ylim([-16, -4])
+    #plt.xlabel('%s residue' % reclig)
     plt.ylabel(
         u'$\\langle \mathrm{\Delta G} \\rangle$ [kcal/mol]')
     frac_percent = int(100 * BOUND_FILTER_DELTA_G_TOP_FRACTION)
