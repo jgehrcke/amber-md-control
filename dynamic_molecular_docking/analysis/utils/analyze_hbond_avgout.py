@@ -215,7 +215,8 @@ def evaluate_plot_data(nbr_processed_data_sets, output_dir):
         mpop_resnames,
         #rotation=45,
         fontsize=10)
-    plt.ylabel('Normalized hydrogen bond occupancy',)
+    #plt.ylabel('Normalized hydrogen bond occupancy',)
+    plt.ylabel('Time distribution of H-bond occupancy',)
     plt.xlabel('Residue')
     plt.tight_layout()
     p = os.path.join(output_dir, "normalized_occupancy_top.pdf")
@@ -249,8 +250,9 @@ def evaluate_plot_data(nbr_processed_data_sets, output_dir):
         mpop_resnames,
         #rotation=45,
         fontsize=10)
-    plt.ylabel('Normalized H-bond occupancy per trajectory')
+    #plt.ylabel('Normalized H-bond occupancy per trajectory')
     #plt.xlabel('Residue')
+    plt.ylabel('Time distribution of H-bond occupancy',)
     plt.tight_layout()
     p = os.path.join(output_dir, "occupancy_boxplots_top.pdf")
     plt.savefig(p)
